@@ -1,0 +1,6 @@
+domain: koor.tech
+layout:
+- go.kubebuilder.io/v3
+projectName: koor-operator
+repo: github.com/koor-tech/koor-operator
+version: "3"
