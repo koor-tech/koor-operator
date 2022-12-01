@@ -1,0 +1,12 @@
+apiVersion: storage.koor.tech/v1alpha1
+kind: KoorCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: koorcluster
+    app.kubernetes.io/instance: koorcluster-sample
+    app.kubernetes.io/part-of: koor-operator
+    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: koor-operator
+  name: koorcluster-sample
+spec:
+  # TODO(user): Add fields here
