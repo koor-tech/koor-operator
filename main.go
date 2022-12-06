@@ -17,11 +17,15 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	"log"
 	"os"
+	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"helm.sh/helm/v3/pkg/repo"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -33,6 +37,7 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/controllers"
+	hc "github.com/mittwald/go-helm-client"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -48,7 +53,107 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
+const (
+	defaultNamespace = "rook-ceph"
+	valuesFileName   = "utils/values.yaml"
+)
+
 func main() {
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	helmClient, err := hc.New(&hc.Options{
+		Namespace: defaultNamespace,
+		Debug:     true,
+		Linting:   true,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Koor.tech chart repo
+	chartRepo := repo.Entry{
+		Name: "rook-release",
+		URL:  "https://charts.rook.io/release",
+	}
+
+	// Add a chart-repository to the client.
+	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := helmClient.UpdateChartRepos(); err != nil {
+		log.Fatal(err)
+	}
+
+	valuesYaml, err := os.ReadFile(valuesFileName)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	// defer cancel()
+
+	chartSpec := hc.ChartSpec{
+		ReleaseName:     "rook-ceph",
+		ChartName:       "rook-release/rook-ceph",
+		Namespace:       defaultNamespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesYaml:      string(valuesYaml),
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &chartSpec, nil)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Exit(0)
+
+	// settings := cli.New()
+
+	// actionConfig := new(action.Configuration)
+
+	// // You can pass an empty string instead of settings.Namespace() to list
+	// // all namespaces
+	// if err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
+	//     log.Printf("%+v", err)
+	//     os.Exit(1)
+	// }
+
+	// client := action.NewInstall(actionConfig)
+
+	// // Only list deployed
+	// name, chart, err := client.NameAndChart([]string{})
+	// if err != nil {
+	//     log.Printf("%+v", err)
+	//     os.Exit(1)
+	// }
+
+	// log.Println(name, chart)
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	// defer cancel()
+
+	// providers := getter.All(settings)
+	// options := values.Options{
+	// 		ValueFiles: []string{"./utils/values.yaml"},
+	// }
+	// theValues, err := options.MergeValues(providers)
+	// if err != nil {
+	//     log.Printf("%+v", err)
+	//     os.Exit(1)
+	// }
+
+	// client.RunWithContext(ctx)
+
+	// TODO what we need to do?
+	// helm repo add koor-release https://charts.koor.tech/release
+	// helm install --create-namespace --namespace rook-ceph rook-ceph koor-release/rook-ceph --set pspEnable=false
+	//
+
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
