@@ -54,8 +54,9 @@ func init() {
 }
 
 const (
-	defaultNamespace = "rook-ceph"
-	valuesFileName   = "utils/values.yaml"
+	defaultNamespace   = "rook-ceph"
+	operatorValuesFile = "utils/operatorValues.yaml"
+	clusterValuesFile  = "utils/clusterValues.yaml"
 )
 
 func main() {
@@ -71,13 +72,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Koor.tech chart repo
+	// Add rook-release repo
+	// helm repo add rook-release https://charts.rook.io/release
 	chartRepo := repo.Entry{
 		Name: "rook-release",
 		URL:  "https://charts.rook.io/release",
 	}
 
-	// Add a chart-repository to the client.
 	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
 		log.Fatal(err)
 	}
@@ -86,72 +87,53 @@ func main() {
 		log.Fatal(err)
 	}
 
-	valuesYaml, err := os.ReadFile(valuesFileName)
-
+	// Install rook operator
+	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
+	operatorValues, err := os.ReadFile(operatorValuesFile)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
-	// defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
-	chartSpec := hc.ChartSpec{
+	operatorChartSpec := hc.ChartSpec{
 		ReleaseName:     "rook-ceph",
 		ChartName:       "rook-release/rook-ceph",
 		Namespace:       defaultNamespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
-		ValuesYaml:      string(valuesYaml),
+		ValuesYaml:      string(operatorValues),
 	}
 
-	_, err = helmClient.InstallOrUpgradeChart(ctx, &chartSpec, nil)
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 
+	// Install rook cluster
+	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
+	clusterValues, err := os.ReadFile(clusterValuesFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	clusterChartSpec := hc.ChartSpec{
+		ReleaseName:     "rook-ceph-cluster",
+		ChartName:       "rook-release/rook-ceph-cluster",
+		Namespace:       defaultNamespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesYaml:      string(clusterValues),
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	os.Exit(0)
 
-	// settings := cli.New()
-
-	// actionConfig := new(action.Configuration)
-
-	// // You can pass an empty string instead of settings.Namespace() to list
-	// // all namespaces
-	// if err := actionConfig.Init(settings.RESTClientGetter(), "", os.Getenv("HELM_DRIVER"), log.Printf); err != nil {
-	//     log.Printf("%+v", err)
-	//     os.Exit(1)
-	// }
-
-	// client := action.NewInstall(actionConfig)
-
-	// // Only list deployed
-	// name, chart, err := client.NameAndChart([]string{})
-	// if err != nil {
-	//     log.Printf("%+v", err)
-	//     os.Exit(1)
-	// }
-
-	// log.Println(name, chart)
-
-	// ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-	// defer cancel()
-
-	// providers := getter.All(settings)
-	// options := values.Options{
-	// 		ValueFiles: []string{"./utils/values.yaml"},
-	// }
-	// theValues, err := options.MergeValues(providers)
-	// if err != nil {
-	//     log.Printf("%+v", err)
-	//     os.Exit(1)
-	// }
-
-	// client.RunWithContext(ctx)
-
-	// TODO what we need to do?
-	// helm repo add koor-release https://charts.koor.tech/release
-	// helm install --create-namespace --namespace rook-ceph rook-ceph koor-release/rook-ceph --set pspEnable=false
 	//
 
 	var metricsAddr string
