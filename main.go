@@ -25,6 +25,7 @@ import (
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
+	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/repo"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
@@ -89,11 +90,6 @@ func main() {
 
 	// Install rook operator
 	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
-	operatorValues, err := os.ReadFile(operatorValuesFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -103,7 +99,9 @@ func main() {
 		Namespace:       defaultNamespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
-		ValuesYaml:      string(operatorValues),
+		ValuesOptions: values.Options{
+			ValueFiles: []string{operatorValuesFile},
+		},
 	}
 
 	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
@@ -113,18 +111,16 @@ func main() {
 
 	// Install rook cluster
 	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
-	clusterValues, err := os.ReadFile(clusterValuesFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	clusterChartSpec := hc.ChartSpec{
 		ReleaseName:     "rook-ceph-cluster",
 		ChartName:       "rook-release/rook-ceph-cluster",
 		Namespace:       defaultNamespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
-		ValuesYaml:      string(clusterValues),
+		ValuesOptions: values.Options{
+			ValueFiles:   []string{clusterValuesFile},
+			Values:       []string{"operatorNamespace="+defaultNamespace},
+		},
 	}
 
 	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
