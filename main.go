@@ -17,16 +17,11 @@ limitations under the License.
 package main
 
 import (
-	"context"
 	"flag"
-	"log"
 	"os"
-	"time"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
-	"helm.sh/helm/v3/pkg/cli/values"
-	"helm.sh/helm/v3/pkg/repo"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,7 +33,6 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/controllers"
-	hc "github.com/mittwald/go-helm-client"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -54,84 +48,7 @@ func init() {
 	//+kubebuilder:scaffold:scheme
 }
 
-const (
-	defaultNamespace   = "rook-ceph"
-	operatorValuesFile = "utils/operatorValues.yaml"
-	clusterValuesFile  = "utils/clusterValues.yaml"
-)
-
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-
-	helmClient, err := hc.New(&hc.Options{
-		Namespace: defaultNamespace,
-		Debug:     true,
-		Linting:   true,
-	})
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Add rook-release repo
-	// helm repo add rook-release https://charts.rook.io/release
-	chartRepo := repo.Entry{
-		Name: "rook-release",
-		URL:  "https://charts.rook.io/release",
-	}
-
-	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := helmClient.UpdateChartRepos(); err != nil {
-		log.Fatal(err)
-	}
-
-	// Install rook operator
-	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	operatorChartSpec := hc.ChartSpec{
-		ReleaseName:     "rook-ceph",
-		ChartName:       "rook-release/rook-ceph",
-		Namespace:       defaultNamespace,
-		CreateNamespace: true,
-		UpgradeCRDs:     true,
-		ValuesOptions: values.Options{
-			ValueFiles: []string{operatorValuesFile},
-		},
-	}
-
-	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Install rook cluster
-	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
-	clusterChartSpec := hc.ChartSpec{
-		ReleaseName:     "rook-ceph-cluster",
-		ChartName:       "rook-release/rook-ceph-cluster",
-		Namespace:       defaultNamespace,
-		CreateNamespace: true,
-		UpgradeCRDs:     true,
-		ValuesOptions: values.Options{
-			ValueFiles:   []string{clusterValuesFile},
-			Values:       []string{"operatorNamespace="+defaultNamespace},
-		},
-	}
-
-	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	os.Exit(0)
-
-	//
-
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string

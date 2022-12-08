@@ -25,6 +25,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	hc "github.com/mittwald/go-helm-client"
+	"helm.sh/helm/v3/pkg/cli/values"
+	"helm.sh/helm/v3/pkg/repo"
 )
 
 // KoorClusterReconciler reconciles a KoorCluster object
@@ -32,6 +35,13 @@ type KoorClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
+
+// TODO use defaulter and spec
+const (
+	defaultNamespace   = "rook-ceph"
+	operatorValuesFile = "utils/operatorValues.yaml"
+	clusterValuesFile  = "utils/clusterValues.yaml"
+)
 
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/status,verbs=get;update;patch
@@ -47,9 +57,85 @@ type KoorClusterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	var koorCluster storagev1alpha1.KoorCluster
+	if err := r.Get(ctx, req.NamespacedName, &koorCluster); err != nil {
+		log.Error(err, "unable to fetch KoorCluster")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	helmClient, err := hc.New(&hc.Options{
+		Namespace: defaultNamespace,
+		Debug:     true,
+		Linting:   true,
+	})
+
+	if err != nil {
+		log.Error(err, "Cannot create new helm client")
+		return ctrl.Result{}, err
+	}
+
+	// Add rook-release repo
+	// helm repo add rook-release https://charts.rook.io/release
+	chartRepo := repo.Entry{
+		Name: "rook-release",
+		URL:  "https://charts.rook.io/release",
+	}
+
+	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
+		log.Error(err, "Cannot add rook-release repo")
+		return ctrl.Result{}, err
+	}
+
+	if err := helmClient.UpdateChartRepos(); err != nil {
+		log.Error(err, "Cannot update chart repos")
+		return ctrl.Result{}, err
+	}
+
+	// Install rook operator
+	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
+	// TODO find a way to provide this as input
+	operatorChartSpec := hc.ChartSpec{
+		ReleaseName:     "rook-ceph",
+		ChartName:       "rook-release/rook-ceph",
+		Namespace:       defaultNamespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesOptions: values.Options{
+			ValueFiles: []string{operatorValuesFile},
+		},
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
+	if err != nil {
+		log.Error(err, "Cannot install or upgrade operator chart")
+		return ctrl.Result{}, err
+	}
+
+	// Install rook cluster
+	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
+	// TODO find a way to provide this as input
+	clusterChartSpec := hc.ChartSpec{
+		ReleaseName:     "rook-ceph-cluster",
+		ChartName:       "rook-release/rook-ceph-cluster",
+		Namespace:       defaultNamespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesOptions: values.Options{
+			ValueFiles: []string{clusterValuesFile},
+			Values:     []string{"operatorNamespace=" + defaultNamespace},
+		},
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
+	if err != nil {
+		log.Error(err, "Cannot install or upgrade cluster chart")
+		return ctrl.Result{}, err
+	}
 
 	return ctrl.Result{}, nil
 }
