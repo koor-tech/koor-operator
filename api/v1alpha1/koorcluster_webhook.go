@@ -32,8 +32,6 @@ func (r *KoorCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 //+kubebuilder:webhook:path=/mutate-storage-koor-tech-v1alpha1-koorcluster,mutating=true,failurePolicy=fail,sideEffects=None,groups=storage.koor.tech,resources=koorclusters,verbs=create;update,versions=v1alpha1,name=mkoorcluster.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &KoorCluster{}
@@ -42,7 +40,22 @@ var _ webhook.Defaulter = &KoorCluster{}
 func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
+	if r.Spec.UseAllDevices == nil {
+        r.Spec.UseAllDevices = new(bool)
+		*r.Spec.UseAllDevices = true
+    }
+	if r.Spec.MonitoringEnabled == nil {
+        r.Spec.MonitoringEnabled = new(bool)
+		*r.Spec.MonitoringEnabled = true
+    }
+	if r.Spec.DahsboardEnabled == nil {
+        r.Spec.DahsboardEnabled = new(bool)
+		*r.Spec.DahsboardEnabled = true
+    }
+	if r.Spec.ToolboxEnabled == nil {
+        r.Spec.ToolboxEnabled = new(bool)
+		*r.Spec.ToolboxEnabled = true
+    }
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

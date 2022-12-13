@@ -1,0 +1,54 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: mutating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /mutate-storage-koor-tech-v1alpha1-koorcluster
+  failurePolicy: Fail
+  name: mkoorcluster.kb.io
+  rules:
+  - apiGroups:
+    - storage.koor.tech
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - koorclusters
+  sideEffects: None
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-storage-koor-tech-v1alpha1-koorcluster
+  failurePolicy: Fail
+  name: vkoorcluster.kb.io
+  rules:
+  - apiGroups:
+    - storage.koor.tech
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - koorclusters
+  sideEffects: None

@@ -35,10 +35,18 @@ spec:
           spec:
             description: KoorClusterSpec defines the desired state of KoorCluster
             properties:
-              foo:
-                description: Foo is an example field of KoorCluster. Edit koorcluster_types.go
-                  to remove/update
-                type: string
+              dashboardEnabled:
+                description: Enable the ceph dashboard for viewing cluster status
+                type: boolean
+              monitoringEnabled:
+                description: Enable monitoring. Requires Prometheus to be pre-installed.
+                type: boolean
+              toolboxEnabled:
+                description: Installs a debugging toolbox deployment
+                type: boolean
+              useAllDevices:
+                description: Use all devices on nodes
+                type: boolean
             type: object
           status:
             description: KoorClusterStatus defines the observed state of KoorCluster
