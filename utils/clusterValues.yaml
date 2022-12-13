@@ -1,1 +1,24 @@
+# Namespace of the main rook operator
+operatorNamespace: {{ .Namespace }}
+
+# If true, create & use PSP resources. Set this to the same value as the rook-ceph chart.
 pspEnable: false
+
+monitoring:
+  # Enable monitoring. Requires Prometheus to be pre-installed.
+  # Enabling will also create RBAC rules to allow Operator to create ServiceMonitors
+  enabled: {{ .Spec.MonitoringEnabled }}
+
+# Installs a debugging toolbox deployment
+toolbox:
+  # Enable Ceph debugging pod deployment. See [toolbox](../Troubleshooting/ceph-toolbox.md)
+  enabled: {{ .Spec.ToolboxEnabled }}
+
+cephClusterSpec:
+  # enable the ceph dashboard for viewing cluster status
+  dashboard:
+    enabled: {{ .Spec.DashboardEnabled }}
+
+  # cluster level storage configuration and selection
+  storage:
+    useAllDevices: {{ .Spec.UseAllDevices }}

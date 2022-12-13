@@ -41,21 +41,21 @@ func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
 
 	if r.Spec.UseAllDevices == nil {
-        r.Spec.UseAllDevices = new(bool)
+		r.Spec.UseAllDevices = new(bool)
 		*r.Spec.UseAllDevices = true
-    }
+	}
 	if r.Spec.MonitoringEnabled == nil {
-        r.Spec.MonitoringEnabled = new(bool)
+		r.Spec.MonitoringEnabled = new(bool)
 		*r.Spec.MonitoringEnabled = true
-    }
-	if r.Spec.DahsboardEnabled == nil {
-        r.Spec.DahsboardEnabled = new(bool)
-		*r.Spec.DahsboardEnabled = true
-    }
+	}
+	if r.Spec.DashboardEnabled == nil {
+		r.Spec.DashboardEnabled = new(bool)
+		*r.Spec.DashboardEnabled = true
+	}
 	if r.Spec.ToolboxEnabled == nil {
-        r.Spec.ToolboxEnabled = new(bool)
-		*r.Spec.ToolboxEnabled = true
-    }
+		r.Spec.ToolboxEnabled = new(bool)
+		*r.Spec.ToolboxEnabled = false
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

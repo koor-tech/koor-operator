@@ -32,7 +32,7 @@ type KoorClusterSpec struct {
 	// Enable monitoring. Requires Prometheus to be pre-installed.
 	MonitoringEnabled *bool `json:"monitoringEnabled,omitempty"`
 	// Enable the ceph dashboard for viewing cluster status
-	DahsboardEnabled *bool `json:"dashboardEnabled,omitempty"`
+	DashboardEnabled *bool `json:"dashboardEnabled,omitempty"`
 	// Installs a debugging toolbox deployment
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 }

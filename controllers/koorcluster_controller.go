@@ -17,7 +17,9 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
+	"text/template"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -26,7 +28,6 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	hc "github.com/mittwald/go-helm-client"
-	"helm.sh/helm/v3/pkg/cli/values"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
@@ -36,9 +37,7 @@ type KoorClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-// TODO use defaulter and spec
 const (
-	defaultNamespace   = "rook-ceph"
 	operatorValuesFile = "utils/operatorValues.yaml"
 	clusterValuesFile  = "utils/clusterValues.yaml"
 )
@@ -69,7 +68,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	helmClient, err := hc.New(&hc.Options{
-		Namespace: defaultNamespace,
+		Namespace: koorCluster.Namespace,
 		Debug:     true,
 		Linting:   true,
 	})
@@ -98,16 +97,21 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// Install rook operator
 	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
-	// TODO find a way to provide this as input
+	operatorBuffer := new(bytes.Buffer)
+	operatorTemplate, err := template.ParseFiles(operatorValuesFile)
+	if err != nil {
+		log.Error(err, "Cannot parse operator template")
+		return ctrl.Result{}, err
+	}
+	operatorTemplate.Execute(operatorBuffer, koorCluster)
+
 	operatorChartSpec := hc.ChartSpec{
-		ReleaseName:     "rook-ceph",
+		ReleaseName:     koorCluster.Namespace,
 		ChartName:       "rook-release/rook-ceph",
-		Namespace:       defaultNamespace,
+		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
-		ValuesOptions: values.Options{
-			ValueFiles: []string{operatorValuesFile},
-		},
+		ValuesYaml:      operatorBuffer.String(),
 	}
 
 	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
@@ -118,17 +122,21 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// Install rook cluster
 	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
-	// TODO find a way to provide this as input
+	clusterBuffer := new(bytes.Buffer)
+	clusterTemplate, err := template.ParseFiles(clusterValuesFile)
+	if err != nil {
+		log.Error(err, "Cannot parse operator template")
+		return ctrl.Result{}, err
+	}
+	clusterTemplate.Execute(clusterBuffer, koorCluster)
+
 	clusterChartSpec := hc.ChartSpec{
-		ReleaseName:     "rook-ceph-cluster",
+		ReleaseName:     koorCluster.Namespace + "-cluster",
 		ChartName:       "rook-release/rook-ceph-cluster",
-		Namespace:       defaultNamespace,
+		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
-		ValuesOptions: values.Options{
-			ValueFiles: []string{clusterValuesFile},
-			Values:     []string{"operatorNamespace=" + defaultNamespace},
-		},
+		ValuesYaml:      clusterBuffer.String(),
 	}
 
 	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)

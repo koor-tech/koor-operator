@@ -97,8 +97,8 @@ func (in *KoorClusterSpec) DeepCopyInto(out *KoorClusterSpec) {
 		*out = new(bool)
 		**out = **in
 	}
-	if in.DahsboardEnabled != nil {
-		in, out := &in.DahsboardEnabled, &out.DahsboardEnabled
+	if in.DashboardEnabled != nil {
+		in, out := &in.DashboardEnabled, &out.DashboardEnabled
 		*out = new(bool)
 		**out = **in
 	}

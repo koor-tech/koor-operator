@@ -1,3 +1,9 @@
+# Namespace where the operator and other rook resources are created
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rook-ceph # namespace:cluster
+---
 apiVersion: storage.koor.tech/v1alpha1
 kind: KoorCluster
 metadata:
@@ -8,5 +14,9 @@ metadata:
     app.kuberentes.io/managed-by: kustomize
     app.kubernetes.io/created-by: koor-operator
   name: koorcluster-sample
+  namespace: rook-ceph
 spec:
-  # TODO(user): Add fields here
+  useAllDevices: true
+  monitoringEnabled: true
+  dashboardEnabled: true
+  toolboxEnabled: true
