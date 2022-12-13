@@ -28,8 +28,15 @@ type KoorClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of KoorCluster. Edit koorcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// TODO add defaults
+	// Use all devices on nodes
+	UseAllDevices *bool `json:"useAllDevices,omitempty"`
+	// Enable monitoring. Requires Prometheus to be pre-installed.
+	MonitoringEnabled *bool `json:"monitoringEnabled,omitempty"`
+	// Enable the ceph dashboard for viewing cluster status
+	DahsboardEnabled *bool `json:"dashboardEnabled,omitempty"`
+	// Installs a debugging toolbox deployment
+	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 }
 
 // KoorClusterStatus defines the observed state of KoorCluster
