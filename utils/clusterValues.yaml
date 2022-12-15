@@ -7,18 +7,18 @@ pspEnable: false
 monitoring:
   # Enable monitoring. Requires Prometheus to be pre-installed.
   # Enabling will also create RBAC rules to allow Operator to create ServiceMonitors
-  enabled: {{ .Spec.MonitoringEnabled }}
+  enabled: {{ .Spec.MonitoringEnabled | default true }}
 
 # Installs a debugging toolbox deployment
 toolbox:
   # Enable Ceph debugging pod deployment. See [toolbox](../Troubleshooting/ceph-toolbox.md)
-  enabled: {{ .Spec.ToolboxEnabled }}
+  enabled: {{ .Spec.ToolboxEnabled | default false }}
 
 cephClusterSpec:
   # enable the ceph dashboard for viewing cluster status
   dashboard:
-    enabled: {{ .Spec.DashboardEnabled }}
+    enabled: {{ .Spec.DashboardEnabled | default true }}
 
   # cluster level storage configuration and selection
   storage:
-    useAllDevices: {{ .Spec.UseAllDevices }}
+    useAllDevices: {{ .Spec.UseAllDevices | default true }}

@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/Masterminds/sprig/v3"
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	hc "github.com/mittwald/go-helm-client"
 	"helm.sh/helm/v3/pkg/repo"
@@ -99,6 +100,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
 	operatorTemplate, err := template.ParseFiles(operatorValuesFile)
+	operatorTemplate.Funcs(sprig.TxtFuncMap())
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
@@ -124,6 +126,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
 	clusterBuffer := new(bytes.Buffer)
 	clusterTemplate, err := template.ParseFiles(clusterValuesFile)
+	clusterTemplate.Funcs(sprig.TxtFuncMap())
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
