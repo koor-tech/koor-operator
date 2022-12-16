@@ -9,26 +9,15 @@ You’ll need a Kubernetes cluster to run against. You can use [minikube](https:
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Use a Local Docker Registry with Minikube
-1. Create a local docker registry:
+1. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
 ```sh
-sudo docker run -d -p 5000:5000 --restart=always --volume ~/.registry/storage:/var/lib/registry registry:2
+minikube addons enable registry
 ```
-2. Edit the `/etc/hosts` file on your development machine, adding the [hostname from minikube](https://minikube.sigs.k8s.io/docs/handbook/host-access/) `host.minikube.internal` on the same line as the entry for localhost.
-3. Add the registry to insecure-registries in `/etc/docker/daemon.json`
-```json
-{
-    "insecure-registries": [
-        "localhost:5000"
-    ]
-}
-```
-3. Validate that the registry at `host.minikube.internal:5000` is reachable from your development machine.
+2. Redirect port 5000 on docker to port 5000 on the minikube
 ```sh
-$ curl host.minikube.internal:5000/v2/_catalog
-{"repositories":[]}
+sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
-4. Start your minikube cluster with the flag `--insecure-registry="host.minikube.internal:5000"`
-4. Use `host.minikube.internal:5000` as `<some-registry>` in the commands below.
+3. Use `localhost:5000` as `<some-registry>` in the commands below.
 
 ### Running on the cluster
 1. Install Instances of Custom Resources:
