@@ -1,6 +1,14 @@
 # Namespace of the main rook operator
 operatorNamespace: {{ .Namespace }}
 
+# Ability to override ceph.conf
+configOverride: |
+  [global]
+  osd_pool_default_pg_autoscale_mode = warn
+  mon_allow_pool_delete = false
+  osd_pool_default_size = 2
+  osd_pool_default_min_size = 1
+
 # If true, create & use PSP resources. Set this to the same value as the rook-ceph chart.
 pspEnable: false
 
@@ -13,11 +21,23 @@ monitoring:
 toolbox:
   # Enable Ceph debugging pod deployment. See [toolbox](../Troubleshooting/ceph-toolbox.md)
   enabled: {{ .Spec.ToolboxEnabled | default false }}
+  image: rook/ceph:v1.9.11
+  tolerations: []
+  affinity: {}
+  resources: {}
 
 cephClusterSpec:
   # enable the ceph dashboard for viewing cluster status
   dashboard:
     enabled: {{ .Spec.DashboardEnabled | default true }}
+    port: 8443
+
+  # enable the crash collector for ceph daemon crash collection
+  crashCollector:
+    disable: false
+    # Uncomment daysToRetain to prune ceph crash entries older than the
+    # specified number of days.
+    daysToRetain: 7
 
   # cluster level storage configuration and selection
   storage:
