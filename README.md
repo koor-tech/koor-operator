@@ -13,10 +13,12 @@ You’ll need a Kubernetes cluster to run against. You can use [minikube](https:
 ```sh
 minikube addons enable registry
 ```
+
 2. Redirect port 5000 on docker to port 5000 on the minikube
 ```sh
 sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
+
 3. Use `localhost:5000` as `<some-registry>` in the commands below.
 
 ### Running on the cluster
@@ -26,13 +28,18 @@ sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:
 kubectl apply -f config/samples/
 ```
 
-2. Build and push your image to the location specified by `IMG`:
+2. Install [cert-manager](https://cert-manager.io/docs/installation/) to enable webhooks:
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.1/cert-manager.yaml
+```
+
+3. Build and push your image to the location specified by `IMG`:
 
 ```sh
 make docker-build docker-push IMG=<some-registry>/koor-operator:tag
 ```
 
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+4. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy IMG=<some-registry>/koor-operator:tag
