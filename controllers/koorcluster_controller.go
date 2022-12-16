@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"embed"
 	"text/template"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,10 +39,7 @@ type KoorClusterReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-const (
-	operatorValuesFile = "utils/operatorValues.yaml"
-	clusterValuesFile  = "utils/clusterValues.yaml"
-)
+var TemplateFs embed.FS
 
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/status,verbs=get;update;patch
@@ -99,7 +97,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Install rook operator
 	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
-	operatorTemplate, err := template.New("operator-template").Funcs(sprig.TxtFuncMap()).ParseFiles(operatorValuesFile)
+	operatorTemplate, err := template.New("operator-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/operatorValues.yaml")
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
@@ -124,7 +122,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Install rook cluster
 	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
 	clusterBuffer := new(bytes.Buffer)
-	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFiles(clusterValuesFile)
+	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/clusterValues.yaml")
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
