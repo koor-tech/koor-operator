@@ -99,8 +99,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Install rook operator
 	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
-	operatorTemplate, err := template.ParseFiles(operatorValuesFile)
-	operatorTemplate.Funcs(sprig.TxtFuncMap())
+	operatorTemplate, err := template.New("operator-template").Funcs(sprig.TxtFuncMap()).ParseFiles(operatorValuesFile)
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
@@ -125,8 +124,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// Install rook cluster
 	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
 	clusterBuffer := new(bytes.Buffer)
-	clusterTemplate, err := template.ParseFiles(clusterValuesFile)
-	clusterTemplate.Funcs(sprig.TxtFuncMap())
+	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFiles(clusterValuesFile)
 	if err != nil {
 		log.Error(err, "Cannot parse operator template")
 		return ctrl.Result{}, err
