@@ -82,10 +82,10 @@ make install
 2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
 
 ```sh
-make run
+ENABLE_WEBHOOKS=false make run
 ```
 
-**NOTE:** You can also run this in one step by running: `make install run`
+**NOTE:** You can also run this in one step by running: `ENABLE_WEBHOOKS=false make install run`
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:

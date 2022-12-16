@@ -96,9 +96,11 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "KoorCluster")
 		os.Exit(1)
 	}
-	if err = (&storagev1alpha1.KoorCluster{}).SetupWebhookWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create webhook", "webhook", "KoorCluster")
-		os.Exit(1)
+	if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+		if err = (&storagev1alpha1.KoorCluster{}).SetupWebhookWithManager(mgr); err != nil {
+			setupLog.Error(err, "unable to create webhook", "webhook", "KoorCluster")
+			os.Exit(1)
+		}
 	}
 	//+kubebuilder:scaffold:builder
 
