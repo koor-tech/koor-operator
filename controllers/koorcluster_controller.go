@@ -121,7 +121,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	// Install rook cluster
 	// helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
-    //     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+	//     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
 	clusterBuffer := new(bytes.Buffer)
 	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/clusterValues.yaml")
 	if err != nil {

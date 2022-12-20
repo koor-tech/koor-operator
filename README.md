@@ -75,19 +75,25 @@ It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controlle
 which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
 
 ### Test It Out
-1. Install the CRDs into the cluster:
+1. Generate certificates for local testing:
+
+```sh
+make generate-certs
+```
+
+2. Install the CRDs into the cluster:
 
 ```sh
 make install
 ```
 
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+3. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
 
 ```sh
-ENABLE_WEBHOOKS=false make run
+make run
 ```
 
-**NOTE:** You can also run this in one step by running: `ENABLE_WEBHOOKS=false make install run`
+**NOTE:** You can also run this in one step by running: `make generate-certs install run`
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
