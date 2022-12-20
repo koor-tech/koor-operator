@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: koor-ceph # namespace:cluster
+  name: rook-ceph # namespace:cluster
 ---
 apiVersion: storage.koor.tech/v1alpha1
 kind: KoorCluster
@@ -14,7 +14,7 @@ metadata:
     app.kuberentes.io/managed-by: kustomize
     app.kubernetes.io/created-by: koor-operator
   name: koorcluster-sample
-  namespace: koor-ceph
+  namespace: rook-ceph
 spec:
   useAllDevices: true
   monitoringEnabled: true

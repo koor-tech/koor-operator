@@ -94,15 +94,20 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
+	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/*")
+	if err != nil {
+		log.Error(err, "Cannot parse templates")
+		return ctrl.Result{}, err
+	}
+
 	// Install rook operator
 	// helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
-	operatorTemplate, err := template.New("operator-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/operatorValues.yaml")
+	err = templates.ExecuteTemplate(operatorBuffer, "operatorValues.yaml", koorCluster)
 	if err != nil {
-		log.Error(err, "Cannot parse operator template")
+		log.Error(err, "Cannot execute operator template")
 		return ctrl.Result{}, err
 	}
-	operatorTemplate.Execute(operatorBuffer, koorCluster)
 
 	operatorChartSpec := hc.ChartSpec{
 		ReleaseName:     koorCluster.Namespace,
@@ -123,12 +128,11 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	// helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
 	//     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
 	clusterBuffer := new(bytes.Buffer)
-	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/clusterValues.yaml")
+	err = templates.ExecuteTemplate(clusterBuffer, "clusterValues.yaml", koorCluster)
 	if err != nil {
-		log.Error(err, "Cannot parse operator template")
+		log.Error(err, "Cannot execute cluster template")
 		return ctrl.Result{}, err
 	}
-	clusterTemplate.Execute(clusterBuffer, koorCluster)
 
 	clusterChartSpec := hc.ChartSpec{
 		ReleaseName:     koorCluster.Namespace + "-cluster",
