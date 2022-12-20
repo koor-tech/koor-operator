@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/Masterminds/sprig/v3"
@@ -57,8 +58,8 @@ var TemplateFs embed.FS
 func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
 
-	var koorCluster storagev1alpha1.KoorCluster
-	if err := r.Get(ctx, req.NamespacedName, &koorCluster); err != nil {
+	koorCluster := &storagev1alpha1.KoorCluster{}
+	if err := r.Get(ctx, req.NamespacedName, koorCluster); err != nil {
 		log.Error(err, "unable to fetch KoorCluster")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
 		// requeue (we'll need to wait for a new notification), and we can get them
@@ -75,6 +76,42 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		log.Error(err, "Cannot create new helm client")
 		return ctrl.Result{}, err
+	}
+
+	// name of our custom finalizer
+	finalizerName := "storage.koor.tech/finalizer"
+
+	// examine DeletionTimestamp to determine if object is under deletion
+	if koorCluster.ObjectMeta.DeletionTimestamp.IsZero() {
+		// The object is not being deleted, so if it does not have our finalizer,
+		// then lets add the finalizer and update the object. This is equivalent
+		// registering our finalizer.
+		if !controllerutil.ContainsFinalizer(koorCluster, finalizerName) {
+			controllerutil.AddFinalizer(koorCluster, finalizerName)
+			if err := r.Update(ctx, koorCluster); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+	} else {
+		// The object is being deleted
+		if controllerutil.ContainsFinalizer(koorCluster, finalizerName) {
+			// our finalizer is present, so lets handle any external dependency
+			if err := r.deleteExternalResources(koorCluster, helmClient); err != nil {
+				// if fail to delete the external dependency here, return with error
+				// so that it can be retried
+				log.Error(err, "Cannot add delete external resources")
+				return ctrl.Result{}, err
+			}
+
+			// remove our finalizer from the list and update it.
+			controllerutil.RemoveFinalizer(koorCluster, finalizerName)
+			if err := r.Update(ctx, koorCluster); err != nil {
+				return ctrl.Result{}, err
+			}
+		}
+
+		// Stop reconciliation as the item is being deleted
+		return ctrl.Result{}, nil
 	}
 
 	// Add koor-release repo
@@ -157,4 +194,15 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.KoorCluster{}).
 		Complete(r)
+}
+
+// Delete installed releases
+func (r *KoorClusterReconciler) deleteExternalResources(koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+	if err := helmClient.UninstallReleaseByName(koorCluster.Namespace + "-cluster"); err != nil {
+		return err
+	}
+	if err := helmClient.UninstallReleaseByName(koorCluster.Namespace); err != nil {
+		return err
+	}
+	return nil
 }
