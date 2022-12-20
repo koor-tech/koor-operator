@@ -77,15 +77,15 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, err
 	}
 
-	// Add rook-release repo
-	// helm repo add rook-release https://charts.rook.io/release
+	// Add koor-release repo
+	// helm repo add koor-release https://charts.koor.tech/release
 	chartRepo := repo.Entry{
-		Name: "rook-release",
-		URL:  "https://charts.rook.io/release",
+		Name: "koor-release",
+		URL:  "https://charts.koor.tech/release",
 	}
 
 	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
-		log.Error(err, "Cannot add rook-release repo")
+		log.Error(err, "Cannot add koor-release repo")
 		return ctrl.Result{}, err
 	}
 
@@ -95,7 +95,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	// Install rook operator
-	// helm install --create-namespace --namespace rook-ceph rook-ceph rook-release/rook-ceph -f utils/operatorValues.yaml
+	// helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
 	operatorTemplate, err := template.New("operator-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/operatorValues.yaml")
 	if err != nil {
@@ -106,7 +106,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	operatorChartSpec := hc.ChartSpec{
 		ReleaseName:     koorCluster.Namespace,
-		ChartName:       "rook-release/rook-ceph",
+		ChartName:       "koor-release/rook-ceph",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,
@@ -120,7 +120,8 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	}
 
 	// Install rook cluster
-	// helm install --create-namespace --namespace rook-ceph rook-ceph-cluster rook-release/rook-ceph-cluster -f utils/clusterValues.yaml
+	// helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
+    //     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
 	clusterBuffer := new(bytes.Buffer)
 	clusterTemplate, err := template.New("cluster-template").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/clusterValues.yaml")
 	if err != nil {
@@ -131,7 +132,7 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	clusterChartSpec := hc.ChartSpec{
 		ReleaseName:     koorCluster.Namespace + "-cluster",
-		ChartName:       "rook-release/rook-ceph-cluster",
+		ChartName:       "koor-release/rook-ceph-cluster",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
 		UpgradeCRDs:     true,

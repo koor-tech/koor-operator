@@ -1,8 +1,14 @@
 # koor-operator
-// TODO(user): Add simple overview of use/purpose
-
+An operator that installs Koor Storage Distro
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This operator is equivalent to the following commands:
+
+```sh
+helm repo add koor-release https://charts.koor.tech/release
+helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
+helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
+   --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+```
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [minikube](https://minikube.sigs.k8s.io/docs/start/) to get a local cluster for testing, or run against a remote cluster.
@@ -66,7 +72,7 @@ make undeploy
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster
+which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
 
 ### Test It Out
 1. Install the CRDs into the cluster:
