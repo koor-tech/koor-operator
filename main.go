@@ -17,7 +17,6 @@ limitations under the License.
 package main
 
 import (
-	"embed"
 	"flag"
 	"os"
 
@@ -37,9 +36,6 @@ import (
 	//+kubebuilder:scaffold:imports
 )
 
-//go:embed utils/*
-var templateFs embed.FS
-
 var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
@@ -53,9 +49,6 @@ func init() {
 }
 
 func main() {
-	// pass utils/* to controllers
-	controllers.TemplateFs = templateFs
-
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string

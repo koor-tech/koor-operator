@@ -19,7 +19,6 @@ package controllers
 import (
 	"bytes"
 	"context"
-	"embed"
 	"text/template"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -30,6 +29,7 @@ import (
 
 	"github.com/Masterminds/sprig/v3"
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	"github.com/koor-tech/koor-operator/utils"
 	hc "github.com/mittwald/go-helm-client"
 	"helm.sh/helm/v3/pkg/repo"
 )
@@ -39,8 +39,6 @@ type KoorClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 }
-
-var TemplateFs embed.FS
 
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/status,verbs=get;update;patch
@@ -126,7 +124,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 		return err
 	}
 
-	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(TemplateFs, "utils/*")
+	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(&utils.Templates, "*")
 	if err != nil {
 		log.Error(err, "Cannot parse templates")
 		return err
