@@ -55,6 +55,12 @@ type KoorCluster struct {
 	Status KoorClusterStatus `json:"status,omitempty"`
 }
 
+func (k *KoorCluster) IsBeingDeleted() bool {
+	return !k.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+const KoorClusterFinalizerName = "storage.koor.tech/finalizer"
+
 //+kubebuilder:object:root=true
 
 // KoorClusterList contains a list of KoorCluster
