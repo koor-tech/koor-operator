@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.2
+	github.com/golang/mock v1.6.0
 	github.com/mittwald/go-helm-client v0.11.5
 	github.com/onsi/ginkgo/v2 v2.1.6
 	github.com/onsi/gomega v1.20.1
