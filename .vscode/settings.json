@@ -8,4 +8,7 @@
   "go.lintFlags": [
     "--fast"
   ],
+  "go.testEnvVars": {
+    "KUBEBUILDER_ASSETS": "${workspaceFolder}/bin/k8s/1.25.0-linux-amd64"
+  },
 }
