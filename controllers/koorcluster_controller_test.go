@@ -25,13 +25,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	hc "github.com/mittwald/go-helm-client"
 	hcmock "github.com/mittwald/go-helm-client/mock"
 )
 
 var _ = Describe("KoorCluster controller", func() {
 	const (
-		KoorClusterName      = "test-koorcluster"
-		KoorClusterNamespace = "default"
+		KoorClusterNamePrefix = "test-koorcluster-"
+		KoorClusterNamespace  = "default"
 
 		timeout  = time.Second * 10
 		duration = time.Second * 10
@@ -55,9 +56,20 @@ var _ = Describe("KoorCluster controller", func() {
 
 	Context("When creating a KoorCluster", func() {
 		It("Should install the operator and the cluster helm charts", func() {
-			mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil).Times(1)
-			mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1)
-			mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil).Times(2)
+			gomock.InOrder(
+				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil).Times(1),
+				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace))
+						return nil, nil
+					}),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-cluster"))
+						return nil, nil
+					}),
+			)
 
 			By("By creating a new KoorCluster")
 			ctx := context.Background()
@@ -67,12 +79,37 @@ var _ = Describe("KoorCluster controller", func() {
 					Kind:       "KoorCluster",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      KoorClusterName,
-					Namespace: KoorClusterNamespace,
+					GenerateName: KoorClusterNamePrefix,
+					Namespace:    KoorClusterNamespace,
 				},
 			}
 			Expect(k8sClient.Create(ctx, koorCluster)).To(Succeed())
 			Expect(reconciler.reconcileNormal(ctx, koorCluster, mockHelmClient)).To(Succeed())
+		})
+	})
+
+	Context("When finalizing a KoorCluster", func() {
+		It("Should uninstall the operator and the cluster helm charts", func() {
+			gomock.InOrder(
+				mockHelmClient.EXPECT().UninstallReleaseByName(KoorClusterNamespace+"-cluster").Return(nil).Times(1),
+				mockHelmClient.EXPECT().UninstallReleaseByName(KoorClusterNamespace).Return(nil).Times(1),
+			)
+
+			By("By creating a KoorCluster with Finalizer")
+			ctx := context.Background()
+			koorCluster := &storagev1alpha1.KoorCluster{
+				TypeMeta: metav1.TypeMeta{
+					APIVersion: "storage.koor.tech/v1alpha1",
+					Kind:       "KoorCluster",
+				},
+				ObjectMeta: metav1.ObjectMeta{
+					GenerateName: KoorClusterNamePrefix,
+					Namespace:    KoorClusterNamespace,
+					Finalizers:   []string{storagev1alpha1.KoorClusterFinalizerName},
+				},
+			}
+			Expect(k8sClient.Create(ctx, koorCluster)).To(Succeed())
+			Expect(reconciler.handleFinalizer(ctx, koorCluster, mockHelmClient)).To(Succeed())
 		})
 	})
 })
