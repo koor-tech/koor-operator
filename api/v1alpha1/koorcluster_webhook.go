@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/icza/gox/gox"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -41,20 +42,16 @@ func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
 
 	if r.Spec.UseAllDevices == nil {
-		r.Spec.UseAllDevices = new(bool)
-		*r.Spec.UseAllDevices = true
+		r.Spec.UseAllDevices = gox.NewBool(true)
 	}
 	if r.Spec.MonitoringEnabled == nil {
-		r.Spec.MonitoringEnabled = new(bool)
-		*r.Spec.MonitoringEnabled = true
+		r.Spec.MonitoringEnabled = gox.NewBool(true)
 	}
 	if r.Spec.DashboardEnabled == nil {
-		r.Spec.DashboardEnabled = new(bool)
-		*r.Spec.DashboardEnabled = true
+		r.Spec.DashboardEnabled = gox.NewBool(true)
 	}
 	if r.Spec.ToolboxEnabled == nil {
-		r.Spec.ToolboxEnabled = new(bool)
-		*r.Spec.ToolboxEnabled = false
+		r.Spec.ToolboxEnabled = gox.NewBool(true)
 	}
 }
 

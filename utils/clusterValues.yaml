@@ -20,7 +20,7 @@ monitoring:
 # Installs a debugging toolbox deployment
 toolbox:
   # Enable Ceph debugging pod deployment. See [toolbox](../Troubleshooting/ceph-toolbox.md)
-  enabled: {{ .Spec.ToolboxEnabled | default false }}
+  enabled: {{ .Spec.ToolboxEnabled | default true }}
   image: rook/ceph:v1.9.11
   tolerations: []
   affinity: {}
