@@ -58,6 +58,15 @@ vet: ## Run go vet against code.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
+CERTSDIR=/tmp/k8s-webhook-server/serving-certs
+.PHONY: generate-certs
+generate-certs: ## Generates the certs required to run webhooks locally
+	mkdir -p $(CERTSDIR)
+	cd $(CERTSDIR) && \
+		openssl genrsa 2048 > tls.key && \
+		openssl req -new -x509 -nodes -sha256 -days 365 -key tls.key -out tls.crt -subj "/C=CA"
+
+
 ##@ Build
 
 .PHONY: build

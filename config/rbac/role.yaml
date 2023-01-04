@@ -1,0 +1,33 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - storage.koor.tech
+  resources:
+  - koorclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - storage.koor.tech
+  resources:
+  - koorclusters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - storage.koor.tech
+  resources:
+  - koorclusters/status
+  verbs:
+  - get
+  - patch
+  - update

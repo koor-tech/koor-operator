@@ -1,12 +1,34 @@
 # koor-operator
-// TODO(user): Add simple overview of use/purpose
-
+An operator that installs Koor Storage Distro
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This operator is equivalent to the following commands:
+
+```sh
+helm repo add koor-release https://charts.koor.tech/release
+helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
+helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
+   --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+```
 
 ## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
+You’ll need a Kubernetes cluster to run against. You can use [minikube](https://minikube.sigs.k8s.io/docs/start/) to get a local cluster for testing, or run against a remote cluster.
+
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+
+### Use a Local Docker Registry with Minikube
+1. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
+
+```sh
+minikube addons enable registry
+```
+
+2. Redirect port 5000 on docker to port 5000 on the minikube
+
+```sh
+sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
+```
+
+3. Use `localhost:5000` as `<some-registry>` in the commands below.
 
 ### Running on the cluster
 1. Install Instances of Custom Resources:
@@ -15,13 +37,19 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 kubectl apply -f config/samples/
 ```
 
-2. Build and push your image to the location specified by `IMG`:
-	
+2. Install [cert-manager](https://cert-manager.io/docs/installation/) to enable webhooks:
+
+```sh
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.1/cert-manager.yaml
+```
+
+3. Build and push your image to the location specified by `IMG`:
+
 ```sh
 make docker-build docker-push IMG=<some-registry>/koor-operator:tag
 ```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+
+4. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy IMG=<some-registry>/koor-operator:tag
@@ -47,23 +75,29 @@ make undeploy
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
+which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
 
 ### Test It Out
-1. Install the CRDs into the cluster:
+1. Generate certificates for local testing:
+
+```sh
+make generate-certs
+```
+
+2. Install the CRDs into the cluster:
 
 ```sh
 make install
 ```
 
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+3. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
 
 ```sh
 make run
 ```
 
-**NOTE:** You can also run this in one step by running: `make install run`
+**NOTE:** You can also run this in one step by running: `make generate-certs install run`
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
@@ -78,7 +112,7 @@ More information can be found via the [Kubebuilder Documentation](https://book.k
 
 ## License
 
-Copyright 2022.
+Copyright 2023 Koor Technologies, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -91,4 +125,3 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-

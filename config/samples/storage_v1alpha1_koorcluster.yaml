@@ -8,5 +8,9 @@ metadata:
     app.kuberentes.io/managed-by: kustomize
     app.kubernetes.io/created-by: koor-operator
   name: koorcluster-sample
+  namespace: rook-ceph
 spec:
-  # TODO(user): Add fields here
+  useAllDevices: true
+  monitoringEnabled: true
+  dashboardEnabled: true
+  toolboxEnabled: true

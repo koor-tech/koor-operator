@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2023 Koor Technologies, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // KoorClusterSpec defines the desired state of KoorCluster
@@ -28,8 +27,14 @@ type KoorClusterSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of KoorCluster. Edit koorcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Use all devices on nodes
+	UseAllDevices *bool `json:"useAllDevices,omitempty"`
+	// Enable monitoring. Requires Prometheus to be pre-installed.
+	MonitoringEnabled *bool `json:"monitoringEnabled,omitempty"`
+	// Enable the ceph dashboard for viewing cluster status
+	DashboardEnabled *bool `json:"dashboardEnabled,omitempty"`
+	// Installs a debugging toolbox deployment
+	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 }
 
 // KoorClusterStatus defines the observed state of KoorCluster
@@ -49,6 +54,12 @@ type KoorCluster struct {
 	Spec   KoorClusterSpec   `json:"spec,omitempty"`
 	Status KoorClusterStatus `json:"status,omitempty"`
 }
+
+func (k *KoorCluster) IsBeingDeleted() bool {
+	return !k.ObjectMeta.DeletionTimestamp.IsZero()
+}
+
+const KoorClusterFinalizerName = "storage.koor.tech/finalizer"
 
 //+kubebuilder:object:root=true
 

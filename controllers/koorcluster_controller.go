@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2023 Koor Technologies, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,14 +17,21 @@ limitations under the License.
 package controllers
 
 import (
+	"bytes"
 	"context"
+	"text/template"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	"github.com/Masterminds/sprig/v3"
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	"github.com/koor-tech/koor-operator/utils"
+	hc "github.com/mittwald/go-helm-client"
+	"helm.sh/helm/v3/pkg/repo"
 )
 
 // KoorClusterReconciler reconciles a KoorCluster object
@@ -47,11 +54,47 @@ type KoorClusterReconciler struct {
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.13.0/pkg/reconcile
 func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	_ = log.FromContext(ctx)
+	log := log.FromContext(ctx)
 
-	// TODO(user): your logic here
+	koorCluster := &storagev1alpha1.KoorCluster{}
+	if err := r.Get(ctx, req.NamespacedName, koorCluster); err != nil {
+		log.Error(err, "unable to fetch KoorCluster")
+		// we'll ignore not-found errors, since they can't be fixed by an immediate
+		// requeue (we'll need to wait for a new notification), and we can get them
+		// on deleted requests.
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-	return ctrl.Result{}, nil
+	helmClient, err := hc.New(&hc.Options{
+		Namespace: koorCluster.Namespace,
+		Debug:     true,
+		Linting:   true,
+	})
+
+	if err != nil {
+		log.Error(err, "Cannot create new helm client")
+		return ctrl.Result{}, err
+	}
+
+	const finalizerName = storagev1alpha1.KoorClusterFinalizerName
+
+	if koorCluster.IsBeingDeleted() {
+		if err := r.handleFinalizer(ctx, koorCluster, helmClient); err != nil {
+			log.Error(err, "Cannot handle finalizer")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
+	}
+
+	if !controllerutil.ContainsFinalizer(koorCluster, finalizerName) {
+		controllerutil.AddFinalizer(koorCluster, finalizerName)
+		if err := r.Update(ctx, koorCluster); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
+	err = r.reconcileNormal(ctx, koorCluster, helmClient)
+	return ctrl.Result{}, err
 }
 
 // SetupWithManager sets up the controller with the Manager.
@@ -59,4 +102,107 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.KoorCluster{}).
 		Complete(r)
+}
+
+func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+	log := log.FromContext(ctx)
+
+	// Add koor-release repo
+	// helm repo add koor-release https://charts.koor.tech/release
+	chartRepo := repo.Entry{
+		Name: "koor-release",
+		URL:  "https://charts.koor.tech/release",
+	}
+
+	if err := helmClient.AddOrUpdateChartRepo(chartRepo); err != nil {
+		log.Error(err, "Cannot add koor-release repo")
+		return err
+	}
+
+	if err := helmClient.UpdateChartRepos(); err != nil {
+		log.Error(err, "Cannot update chart repos")
+		return err
+	}
+
+	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(&utils.Templates, "*")
+	if err != nil {
+		log.Error(err, "Cannot parse templates")
+		return err
+	}
+
+	// Install rook operator
+	// helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
+	operatorBuffer := new(bytes.Buffer)
+	err = templates.ExecuteTemplate(operatorBuffer, "operatorValues.yaml", koorCluster)
+	if err != nil {
+		log.Error(err, "Cannot execute operator template")
+		return err
+	}
+
+	operatorChartSpec := hc.ChartSpec{
+		ReleaseName:     koorCluster.Namespace,
+		ChartName:       "koor-release/rook-ceph",
+		Namespace:       koorCluster.Namespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesYaml:      operatorBuffer.String(),
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
+	if err != nil {
+		log.Error(err, "Cannot install or upgrade operator chart")
+		return err
+	}
+
+	// Install rook cluster
+	// helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
+	//     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+	clusterBuffer := new(bytes.Buffer)
+	err = templates.ExecuteTemplate(clusterBuffer, "clusterValues.yaml", koorCluster)
+	if err != nil {
+		log.Error(err, "Cannot execute cluster template")
+		return err
+	}
+
+	clusterChartSpec := hc.ChartSpec{
+		ReleaseName:     koorCluster.Namespace + "-cluster",
+		ChartName:       "koor-release/rook-ceph-cluster",
+		Namespace:       koorCluster.Namespace,
+		CreateNamespace: true,
+		UpgradeCRDs:     true,
+		ValuesYaml:      clusterBuffer.String(),
+	}
+
+	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
+	if err != nil {
+		log.Error(err, "Cannot install or upgrade cluster chart")
+		return err
+	}
+
+	return nil
+}
+
+// Handle finalizer and uninstall releases
+func (r *KoorClusterReconciler) handleFinalizer(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+	log := log.FromContext(ctx)
+	if !controllerutil.ContainsFinalizer(koorCluster, storagev1alpha1.KoorClusterFinalizerName) {
+		log.Info("No Finalizer")
+		return nil
+	}
+
+	releaseName := koorCluster.Namespace + "-cluster"
+	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
+		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
+		return err
+	}
+
+	releaseName = koorCluster.Namespace
+	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
+		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
+		return err
+	}
+
+	// remove our finalizer from the list and update it.
+	controllerutil.RemoveFinalizer(koorCluster, storagev1alpha1.KoorClusterFinalizerName)
+	return r.Update(ctx, koorCluster)
 }

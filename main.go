@@ -1,5 +1,5 @@
 /*
-Copyright 2022.
+Copyright 2023 Koor Technologies, Inc. All rights reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -94,6 +94,10 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KoorCluster")
+		os.Exit(1)
+	}
+	if err = (&storagev1alpha1.KoorCluster{}).SetupWebhookWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create webhook", "webhook", "KoorCluster")
 		os.Exit(1)
 	}
 	//+kubebuilder:scaffold:builder
