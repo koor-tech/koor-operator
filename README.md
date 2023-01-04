@@ -12,15 +12,18 @@ helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [minikube](https://minikube.sigs.k8s.io/docs/start/) to get a local cluster for testing, or run against a remote cluster.
+
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Use a Local Docker Registry with Minikube
 1. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
+
 ```sh
 minikube addons enable registry
 ```
 
 2. Redirect port 5000 on docker to port 5000 on the minikube
+
 ```sh
 sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
@@ -35,6 +38,7 @@ kubectl apply -f config/samples/
 ```
 
 2. Install [cert-manager](https://cert-manager.io/docs/installation/) to enable webhooks:
+
 ```sh
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.1/cert-manager.yaml
 ```
