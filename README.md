@@ -82,7 +82,7 @@ which provides a reconcile function responsible for synchronizing resources unti
 1. Generate certificates for local testing:
 
 ```sh
-make generate-certs
+make local-certs
 ```
 
 2. Install the CRDs into the cluster:
@@ -97,7 +97,7 @@ make install
 make run
 ```
 
-**NOTE:** You can also run this in one step by running: `make generate-certs install run`
+**NOTE:** You can also run this in one step by running: `make local-certs install run`
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
