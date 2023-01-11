@@ -81,3 +81,10 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+# Taken directly from the CRDs
+koorClusterSpec:
+  useAllDevices: true
+  monitoringEnabled: true
+  dashboardEnabled: true
+  toolboxEnabled: true
