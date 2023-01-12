@@ -16,19 +16,21 @@ You’ll need a Kubernetes cluster to run against. You can use [minikube](https:
 **Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
 ### Use a Local Docker Registry with Minikube
-1. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
+1. Make sure that minikube is started with `--insecure-registry="localhost:5000"`. You might need to delete and restart minikube.
+
+2. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
 
 ```sh
 minikube addons enable registry
 ```
 
-2. Redirect port 5000 on docker to port 5000 on the minikube
+3. Redirect port 5000 on docker to port 5000 on the minikube
 
 ```sh
-sudo docker run -d -p 5000:5000 alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
+sudo docker run -d --network=host alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
 
-3. Use `localhost:5000` as `<some-registry>` in the commands below.
+4. Use `localhost:5000` as `<some-registry>` in the commands below.
 
 ### Running on the cluster
 1. Install Instances of Custom Resources:

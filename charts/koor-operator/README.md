@@ -1,1 +1,2 @@
-Helm chart for Koor Operator
+# koor-operator
+A Helm chart for deploying the Koor Operator to Kubernetes

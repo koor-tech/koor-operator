@@ -1,6 +1,6 @@
 apiVersion: v2
 name: koor-operator
-description: A Helm chart for Koor Operator
+description: A Helm chart for deploying the Koor Operator to Kubernetes
 
 # A chart can be either an 'application' or a 'library' chart.
 #
