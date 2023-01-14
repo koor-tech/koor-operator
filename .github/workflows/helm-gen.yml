@@ -1,4 +1,4 @@
-name: CRDs gen
+name: Helm gen
 on:
   push:
     tags:
@@ -20,8 +20,8 @@ permissions:
   contents: read
 
 jobs:
-  crds-gen:
-    name: crds-gen
+  helm-gen:
+    name: helm-gen
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/setup-go@v3
@@ -33,8 +33,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: run crds-gen
-        run: GOPATH=$(go env GOPATH) make crds
+      - name: run helm-gen
+        run: GOPATH=$(go env GOPATH) make helm
 
-      - name: validate crds-gen
-        run: scripts/validate_modified_files.sh crd
+      - name: validate helm-gen
+        run: scripts/validate_modified_files.sh helm
