@@ -114,8 +114,9 @@ local-certs: ## Generate the certs required to run webhooks locally
 		openssl req -new -x509 -nodes -sha256 -days 365 -key tls.key -out tls.crt -subj "/C=CA"
 
 .PHONY: helm
-helm: manifests kustomize helmify
+helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	$(KUSTOMIZE) build config/default | $(HELMIFY) -crd-dir -v -image-pull-secrets charts/koor-operator
+	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 
 ##@ Build
 

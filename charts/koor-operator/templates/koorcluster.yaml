@@ -1,10 +1,10 @@
 apiVersion: storage.koor.tech/v1alpha1
 kind: KoorCluster
 metadata:
+  name: {{ include "koor-operator.fullname" . }}-koorcluster
   labels:
-    app.kubernetes.io/name: koorcluster
-    app.kubernetes.io/instance: {{ .Release.Namespace }}
+    app.kubernetes.io/created-by: koor-operator
     app.kubernetes.io/part-of: koor-operator
-  name: {{ .Release.Namespace }}
+  {{- include "koor-operator.labels" . | nindent 4 }}
 spec:
 {{ toYaml .Values.koorClusterSpec | indent 2 }}

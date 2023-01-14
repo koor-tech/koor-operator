@@ -22,11 +22,8 @@ controllerManager:
         cpu: 10m
         memory: 64Mi
   replicas: 1
-
 imagePullSecrets: []
-
 kubernetesClusterDomain: cluster.local
-
 metricsService:
   ports:
   - name: https
@@ -34,13 +31,14 @@ metricsService:
     protocol: TCP
     targetPort: https
   type: ClusterIP
-
 webhookService:
   ports:
   - port: 443
     protocol: TCP
     targetPort: 9443
   type: ClusterIP
+
+# This is appeneded to values.yaml from additional-values.yaml. This is a hack to avoid getting these values overwritten by helmify
 
 koorClusterSpec:
   useAllDevices: true
