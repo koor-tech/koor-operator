@@ -22,6 +22,7 @@ import (
 	"text/template"
 
 	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -105,6 +106,32 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
+func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, nodeList *core.NodeList) error {
+	log := log.FromContext(ctx)
+	resources := &koorCluster.Status.TotalResources
+	resources.Nodes = resource.NewQuantity(int64(len(nodeList.Items)), resource.DecimalSI)
+	resources.Storage = &resource.Quantity{}
+	resources.Cpu = &resource.Quantity{}
+	resources.Memory = &resource.Quantity{}
+	// sum resources
+	for idx, _ := range nodeList.Items {
+		capacity := &nodeList.Items[idx].Status.Capacity
+		resources.Storage.Add(*capacity.StorageEphemeral())
+		resources.Cpu.Add(*capacity.Cpu())
+		resources.Memory.Add(*capacity.Memory())
+	}
+	koorCluster.Status.MeetsMinimumResources = resources.MeetsMinimum()
+	if !koorCluster.Status.MeetsMinimumResources {
+		log.Info("The cluster does not meet the minimum resource requirements")
+	}
+
+	if err := r.Status().Update(ctx, koorCluster); err != nil {
+		log.Error(err, "Unable to update KoorCluster status")
+		return err
+	}
+	return nil
+}
+
 func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
 	log := log.FromContext(ctx)
 
@@ -115,15 +142,8 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 		return err
 	}
 
-	koorCluster.Status.NodesCount = len(nodeList.Items)
-	koorCluster.Status.TotalStorage.Reset()
-	koorCluster.Status.TotalCPU.Reset()
-	koorCluster.Status.TotalMemory.Reset()
-	// sum resources
-	for _, node := range nodeList.Items {
-		koorCluster.Status.TotalStorage.Add(*node.Status.Capacity.StorageEphemeral())
-		koorCluster.Status.TotalCPU.Add(*node.Status.Capacity.Cpu())
-		koorCluster.Status.TotalMemory.Add(*node.Status.Capacity.Memory())
+	if err := r.reconcileStatus(ctx, koorCluster, nodeList); err != nil {
+		return err
 	}
 
 	// TODO make/ check if idempotent after this

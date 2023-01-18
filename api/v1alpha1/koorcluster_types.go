@@ -40,14 +40,45 @@ type KoorClusterSpec struct {
 
 // KoorClusterStatus defines the observed state of KoorCluster
 type KoorClusterStatus struct {
+	// The total resources available in the cluster nodes
+	TotalResources Resources `json:"totalResources"`
+	// Does the cluster meet the minimum recommended resources
+	MeetsMinimumResources bool `json:"meetsMinimumResources"`
+}
+
+type Resources struct {
 	// The number of nodes in the cluster
-	NodesCount int `json:"nodesCount,omitempty"`
-	// The total available storage in the cluster
-	TotalStorage *resource.Quantity `json:"totalStorage,omitempty"`
-	// The total available CPU in the cluster
-	TotalCPU *resource.Quantity `json:"totalCPU,omitempty"`
-	// The total available memory in the cluster
-	TotalMemory *resource.Quantity `json:"totalMemory,omitempty"`
+	Nodes *resource.Quantity `json:"nodesCount,omitempty"`
+	// Ephemeral Storage available
+	Storage *resource.Quantity `json:"storage,omitempty"`
+	// CPU cores available
+	Cpu *resource.Quantity `json:"cpu,omitempty"`
+	// Memory available
+	Memory *resource.Quantity `json:"memory,omitempty"`
+}
+
+// Recommended Resources
+var (
+	minNodes   = resource.MustParse("4")
+	minStorage = resource.MustParse("500G")
+	minCpu     = resource.MustParse("16")
+	minMemory  = resource.MustParse("34G")
+)
+
+func (r Resources) MeetsMinimum() bool {
+	if r.Nodes.Cmp(minNodes) == -1 {
+		return false
+	}
+	if r.Storage.Cmp(minStorage) == -1 {
+		return false
+	}
+	if r.Cpu.Cmp(minCpu) == -1 {
+		return false
+	}
+	if r.Memory.Cmp(minMemory) == -1 {
+		return false
+	}
+	return true
 }
 
 //+kubebuilder:object:root=true
