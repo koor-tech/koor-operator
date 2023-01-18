@@ -21,6 +21,7 @@ import (
 	"context"
 	"text/template"
 
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -107,6 +108,25 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
 	log := log.FromContext(ctx)
 
+	// TODO do this regurarly instead of just once. Add a way to reschedule
+	nodeList := &core.NodeList{}
+	if err := r.List(ctx, nodeList); err != nil {
+		log.Error(err, "unable to list Nodes")
+		return err
+	}
+
+	koorCluster.Status.NodesCount = len(nodeList.Items)
+	koorCluster.Status.TotalStorage.Reset()
+	koorCluster.Status.TotalCPU.Reset()
+	koorCluster.Status.TotalMemory.Reset()
+	// sum resources
+	for _, node := range nodeList.Items {
+		koorCluster.Status.TotalStorage.Add(*node.Status.Capacity.StorageEphemeral())
+		koorCluster.Status.TotalCPU.Add(*node.Status.Capacity.Cpu())
+		koorCluster.Status.TotalMemory.Add(*node.Status.Capacity.Memory())
+	}
+
+	// TODO make/ check if idempotent after this
 	// Add koor-release repo
 	// helm repo add koor-release https://charts.koor.tech/release
 	chartRepo := repo.Entry{

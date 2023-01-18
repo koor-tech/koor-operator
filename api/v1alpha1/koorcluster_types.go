@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,8 +40,14 @@ type KoorClusterSpec struct {
 
 // KoorClusterStatus defines the observed state of KoorCluster
 type KoorClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// The number of nodes in the cluster
+	NodesCount int `json:"nodesCount,omitempty"`
+	// The total available storage in the cluster
+	TotalStorage *resource.Quantity `json:"totalStorage,omitempty"`
+	// The total available CPU in the cluster
+	TotalCPU *resource.Quantity `json:"totalCPU,omitempty"`
+	// The total available memory in the cluster
+	TotalMemory *resource.Quantity `json:"totalMemory,omitempty"`
 }
 
 //+kubebuilder:object:root=true
