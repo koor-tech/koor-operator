@@ -19,14 +19,18 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	. "github.com/onsi/ginkgo/v2"
-	. "github.com/onsi/gomega"
+	core "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
-	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	"github.com/golang/mock/gomock"
 	hc "github.com/mittwald/go-helm-client"
 	hcmock "github.com/mittwald/go-helm-client/mock"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+
+	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 )
 
 var _ = Describe("KoorCluster controller", func() {
@@ -55,7 +59,7 @@ var _ = Describe("KoorCluster controller", func() {
 	})
 
 	Context("When creating a KoorCluster", func() {
-		It("Should install the operator and the cluster helm charts", func() {
+		It("Should update status and install the operator and the cluster helm charts", func() {
 			gomock.InOrder(
 				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil).Times(1),
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
@@ -71,20 +75,93 @@ var _ = Describe("KoorCluster controller", func() {
 					}),
 			)
 
-			By("By creating a new KoorCluster")
 			ctx := context.Background()
+
+			By("Creating Nodes on the cluster")
+			nodePrefix := "node-"
+			nodes := []*core.Node{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						GenerateName: nodePrefix,
+					},
+					Status: core.NodeStatus{
+						Capacity: core.ResourceList{
+							core.ResourceCPU:              resource.MustParse("4"),
+							core.ResourceMemory:           resource.MustParse("10G"),
+							core.ResourceEphemeralStorage: resource.MustParse("100G"),
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						GenerateName: nodePrefix,
+					},
+					Status: core.NodeStatus{
+						Capacity: core.ResourceList{
+							core.ResourceCPU:              resource.MustParse("4"),
+							core.ResourceMemory:           resource.MustParse("20G"),
+							core.ResourceEphemeralStorage: resource.MustParse("200G"),
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						GenerateName: nodePrefix,
+					},
+					Status: core.NodeStatus{
+						Capacity: core.ResourceList{
+							core.ResourceCPU:              resource.MustParse("4"),
+							core.ResourceMemory:           resource.MustParse("30G"),
+							core.ResourceEphemeralStorage: resource.MustParse("300G"),
+						},
+					},
+				},
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						GenerateName: nodePrefix,
+					},
+					Status: core.NodeStatus{
+						Capacity: core.ResourceList{
+							core.ResourceCPU:              resource.MustParse("4"),
+							core.ResourceMemory:           resource.MustParse("40G"),
+							core.ResourceEphemeralStorage: resource.MustParse("400G"),
+						},
+					},
+				},
+			}
+
+			for _, node := range nodes {
+				Expect(k8sClient.Create(ctx, node)).To(Succeed())
+			}
+
+			By("By creating a new KoorCluster")
+			name := KoorClusterNamePrefix + "create"
 			koorCluster := &storagev1alpha1.KoorCluster{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "storage.koor.tech/v1alpha1",
 					Kind:       "KoorCluster",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					GenerateName: KoorClusterNamePrefix,
-					Namespace:    KoorClusterNamespace,
+					Name:      name,
+					Namespace: KoorClusterNamespace,
 				},
 			}
 			Expect(k8sClient.Create(ctx, koorCluster)).To(Succeed())
 			Expect(reconciler.reconcileNormal(ctx, koorCluster, mockHelmClient)).To(Succeed())
+
+			By("Checking status")
+			key := types.NamespacedName{Name: name, Namespace: KoorClusterNamespace}
+			createdKoorCluster := &storagev1alpha1.KoorCluster{}
+
+			Eventually(func() error {
+				return k8sClient.Get(ctx, key, createdKoorCluster)
+			}).Should(Succeed())
+
+			Expect(createdKoorCluster.Status.TotalResources.Nodes.Equal(resource.MustParse("4"))).To(BeTrue())
+			Expect(createdKoorCluster.Status.TotalResources.Cpu.Equal(resource.MustParse("16"))).To(BeTrue())
+			Expect(createdKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("100G"))).To(BeTrue())
+			Expect(createdKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("1000G"))).To(BeTrue())
+			Expect(createdKoorCluster.Status.MeetsMinimumResources).To(BeTrue())
 		})
 	})
 
