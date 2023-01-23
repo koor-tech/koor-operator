@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -39,8 +40,45 @@ type KoorClusterSpec struct {
 
 // KoorClusterStatus defines the observed state of KoorCluster
 type KoorClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// The total resources available in the cluster nodes
+	TotalResources Resources `json:"totalResources"`
+	// Does the cluster meet the minimum recommended resources
+	MeetsMinimumResources bool `json:"meetsMinimumResources"`
+}
+
+type Resources struct {
+	// The number of nodes in the cluster
+	Nodes *resource.Quantity `json:"nodesCount,omitempty"`
+	// Ephemeral Storage available
+	Storage *resource.Quantity `json:"storage,omitempty"`
+	// CPU cores available
+	Cpu *resource.Quantity `json:"cpu,omitempty"`
+	// Memory available
+	Memory *resource.Quantity `json:"memory,omitempty"`
+}
+
+// Recommended Resources
+var (
+	minNodes   = resource.MustParse("4")
+	minStorage = resource.MustParse("500G")
+	minCpu     = resource.MustParse("16")
+	minMemory  = resource.MustParse("34G")
+)
+
+func (r Resources) MeetsMinimum() bool {
+	if r.Nodes.Cmp(minNodes) == -1 {
+		return false
+	}
+	if r.Storage.Cmp(minStorage) == -1 {
+		return false
+	}
+	if r.Cpu.Cmp(minCpu) == -1 {
+		return false
+	}
+	if r.Memory.Cmp(minMemory) == -1 {
+		return false
+	}
+	return true
 }
 
 //+kubebuilder:object:root=true
