@@ -19,15 +19,23 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"reflect"
 	"text/template"
 
-	core "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/Masterminds/sprig/v3"
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
@@ -45,6 +53,8 @@ type KoorClusterReconciler struct {
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
+//+kubebuilder:rbac:groups="",resources=nodes/status,verbs=get
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -103,18 +113,65 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.KoorCluster{}).
+		Watches(
+			&source.Kind{Type: &corev1.Node{}},
+			handler.EnqueueRequestsFromMapFunc(r.findKoorClusters),
+			builder.WithPredicates(predicate.Funcs{
+				CreateFunc: func(ce event.CreateEvent) bool {
+					node, ok := ce.Object.(*corev1.Node)
+					if !ok {
+						return false
+					}
+					return len(node.Status.Capacity) != 0
+				},
+				UpdateFunc: func(ue event.UpdateEvent) bool {
+					oldNode, ok := ue.ObjectOld.(*corev1.Node)
+					if !ok {
+						return false
+					}
+					newNode, ok := ue.ObjectNew.(*corev1.Node)
+					if !ok {
+						return false
+					}
+					return !reflect.DeepEqual(oldNode.Status.Capacity, newNode.Status.Capacity)
+				},
+				GenericFunc: func(ge event.GenericEvent) bool {
+					return false
+				},
+			}),
+		).
 		Complete(r)
 }
 
-func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, nodeList *core.NodeList) error {
+func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Request {
+	koorClusterList := &storagev1alpha1.KoorClusterList{}
+	if err := r.List(context.TODO(), koorClusterList); err != nil {
+		return []reconcile.Request{}
+	}
+
+	requests := make([]reconcile.Request, len(koorClusterList.Items))
+	for i := range koorClusterList.Items {
+		item := &koorClusterList.Items[i]
+		requests[i] = reconcile.Request{
+			NamespacedName: types.NamespacedName{
+				Name:      item.GetName(),
+				Namespace: item.GetNamespace(),
+			},
+		}
+	}
+	return requests
+}
+
+func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, nodeList *corev1.NodeList) error {
 	log := log.FromContext(ctx)
 	resources := &koorCluster.Status.TotalResources
 	resources.Nodes = resource.NewQuantity(int64(len(nodeList.Items)), resource.DecimalSI)
 	resources.Storage = &resource.Quantity{}
 	resources.Cpu = &resource.Quantity{}
 	resources.Memory = &resource.Quantity{}
+
 	// sum resources
-	for idx, _ := range nodeList.Items {
+	for idx := range nodeList.Items {
 		capacity := &nodeList.Items[idx].Status.Capacity
 		resources.Storage.Add(*capacity.StorageEphemeral())
 		resources.Cpu.Add(*capacity.Cpu())
@@ -135,8 +192,7 @@ func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster
 func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
 	log := log.FromContext(ctx)
 
-	// TODO do this regurarly instead of just once. Add a way to reschedule
-	nodeList := &core.NodeList{}
+	nodeList := &corev1.NodeList{}
 	if err := r.List(ctx, nodeList); err != nil {
 		log.Error(err, "unable to list Nodes")
 		return err
@@ -146,7 +202,6 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 		return err
 	}
 
-	// TODO make/ check if idempotent after this
 	// Add koor-release repo
 	// helm repo add koor-release https://charts.koor.tech/release
 	chartRepo := repo.Entry{
