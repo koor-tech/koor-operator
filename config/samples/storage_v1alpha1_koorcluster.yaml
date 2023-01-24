@@ -5,7 +5,7 @@ metadata:
     app.kubernetes.io/name: koorcluster
     app.kubernetes.io/instance: koorcluster-sample
     app.kubernetes.io/part-of: koor-operator
-    app.kuberentes.io/managed-by: kustomize
+    app.kubernetes.io/managed-by: kustomize
     app.kubernetes.io/created-by: koor-operator
   name: koorcluster-sample
   namespace: rook-ceph

@@ -39,19 +39,13 @@ sudo docker run -d --network=host alpine/socat TCP-LISTEN:5000,reuseaddr,fork TC
 kubectl apply -f config/samples/
 ```
 
-2. Install [cert-manager](https://cert-manager.io/docs/installation/) to enable webhooks:
-
-```sh
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.1/cert-manager.yaml
-```
-
-3. Build and push your image to the location specified by `IMG`:
+2. Build and push your image to the location specified by `IMG`:
 
 ```sh
 make docker-build docker-push IMG=<some-registry>/koor-operator:tag
 ```
 
-4. Deploy the controller to the cluster with the image specified by `IMG`:
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy IMG=<some-registry>/koor-operator:tag

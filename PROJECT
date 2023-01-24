@@ -1,20 +1,23 @@
 domain: koor.tech
 layout:
-- go.kubebuilder.io/v3
+  - go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
 projectName: koor-operator
 repo: github.com/koor-tech/koor-operator
 resources:
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: koor.tech
-  group: storage
-  kind: KoorCluster
-  path: github.com/koor-tech/koor-operator/api/v1alpha1
-  version: v1alpha1
-  webhooks:
-    defaulting: true
-    validation: true
-    webhookVersion: v1
+  - api:
+      crdVersion: v1
+      namespaced: true
+    controller: true
+    domain: koor.tech
+    group: storage
+    kind: KoorCluster
+    path: github.com/koor-tech/koor-operator/api/v1alpha1
+    version: v1alpha1
+    webhooks:
+      defaulting: true
+      validation: true
+      webhookVersion: v1
 version: "3"
