@@ -61,8 +61,8 @@ type Resources struct {
 var (
 	minNodes   = resource.MustParse("4")
 	minStorage = resource.MustParse("500G")
-	minCpu     = resource.MustParse("16")
-	minMemory  = resource.MustParse("34G")
+	minCpu     = resource.MustParse("19")
+	minMemory  = resource.MustParse("44G")
 )
 
 func (r Resources) MeetsMinimum() bool {
