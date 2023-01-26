@@ -1,0 +1,321 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "storage.koor.tech/v1alpha1",
+          "kind": "KoorCluster",
+          "metadata": {
+            "labels": {
+              "app.kubernetes.io/created-by": "koor-operator",
+              "app.kubernetes.io/instance": "koorcluster-sample",
+              "app.kubernetes.io/managed-by": "kustomize",
+              "app.kubernetes.io/name": "koorcluster",
+              "app.kubernetes.io/part-of": "koor-operator"
+            },
+            "name": "koorcluster-sample",
+            "namespace": "rook-ceph"
+          },
+          "spec": {
+            "dashboardEnabled": true,
+            "monitoringEnabled": true,
+            "toolboxEnabled": true,
+            "useAllDevices": true
+          }
+        }
+      ]
+    capabilities: Basic Install
+    createdAt: "2023-01-26T03:06:03Z"
+    operators.operatorframework.io/builder: operator-sdk-v1.26.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+  name: koor-operator.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: KoorCluster is the Schema for the koorclusters API
+      displayName: Koor Cluster
+      kind: KoorCluster
+      name: koorclusters.storage.koor.tech
+      version: v1alpha1
+  description: An operator that installs Koor Storage Distro
+  displayName: KoorCluster
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - nodes
+          verbs:
+          - get
+          - list
+          - watch
+        - apiGroups:
+          - ""
+          resources:
+          - nodes/status
+          verbs:
+          - get
+        - apiGroups:
+          - storage.koor.tech
+          resources:
+          - koorclusters
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - storage.koor.tech
+          resources:
+          - koorclusters/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - storage.koor.tech
+          resources:
+          - koorclusters/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: koor-operator-controller-manager
+      deployments:
+      - label:
+          app.kubernetes.io/component: manager
+          app.kubernetes.io/created-by: koor-operator
+          app.kubernetes.io/instance: controller-manager
+          app.kubernetes.io/managed-by: kustomize
+          app.kubernetes.io/name: deployment
+          app.kubernetes.io/part-of: koor-operator
+          control-plane: controller-manager
+        name: koor-operator-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
+              labels:
+                control-plane: controller-manager
+            spec:
+              affinity:
+                nodeAffinity:
+                  requiredDuringSchedulingIgnoredDuringExecution:
+                    nodeSelectorTerms:
+                    - matchExpressions:
+                      - key: kubernetes.io/arch
+                        operator: In
+                        values:
+                        - amd64
+                        - arm64
+                        - ppc64le
+                        - s390x
+                      - key: kubernetes.io/os
+                        operator: In
+                        values:
+                        - linux
+              containers:
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
+                - --upstream=http://127.0.0.1:8080/
+                - --logtostderr=true
+                - --v=0
+                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
+                name: kube-rbac-proxy
+                ports:
+                - containerPort: 8443
+                  name: https
+                  protocol: TCP
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 5m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                image: localhost:5000/koor-operator:v0.0.1
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                ports:
+                - containerPort: 9443
+                  name: webhook-server
+                  protocol: TCP
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: koor-operator-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: koor-operator-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - rook
+  - ceph
+  - ksd
+  links:
+  - name: Koor Operator
+    url: https://koor-operator.domain
+  maintainers:
+  - email: zuhair@koor.tech
+    name: Zuhair AlSader
+  - email: alexander@koor.tech
+    name: Alexander Trost
+  maturity: alpha
+  provider:
+    name: koor.tech
+    url: koor.tech
+  version: 0.0.1
+  webhookdefinitions:
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    conversionCRDs:
+    - koorclusters.storage.koor.tech
+    deploymentName: koor-operator-controller-manager
+    generateName: ckoorclusters.kb.io
+    sideEffects: None
+    targetPort: 9443
+    type: ConversionWebhook
+    webhookPath: /convert
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: koor-operator-controller-manager
+    failurePolicy: Fail
+    generateName: mkoorcluster.kb.io
+    rules:
+    - apiGroups:
+      - storage.koor.tech
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - koorclusters
+    sideEffects: None
+    targetPort: 9443
+    type: MutatingAdmissionWebhook
+    webhookPath: /mutate-storage-koor-tech-v1alpha1-koorcluster
+  - admissionReviewVersions:
+    - v1
+    containerPort: 443
+    deploymentName: koor-operator-controller-manager
+    failurePolicy: Fail
+    generateName: vkoorcluster.kb.io
+    rules:
+    - apiGroups:
+      - storage.koor.tech
+      apiVersions:
+      - v1alpha1
+      operations:
+      - CREATE
+      - UPDATE
+      resources:
+      - koorclusters
+    sideEffects: None
+    targetPort: 9443
+    type: ValidatingAdmissionWebhook
+    webhookPath: /validate-storage-koor-tech-v1alpha1-koorcluster
