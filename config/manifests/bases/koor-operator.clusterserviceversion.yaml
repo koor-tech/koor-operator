@@ -1,0 +1,52 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: koor-operator.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: KoorCluster is the Schema for the koorclusters API
+      displayName: Koor Cluster
+      kind: KoorCluster
+      name: koorclusters.storage.koor.tech
+      version: v1alpha1
+  description: An operator that installs Koor Storage Distro
+  displayName: KoorCluster
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - rook
+  - ceph
+  - ksd
+  links:
+  - name: Koor Operator
+    url: https://koor-operator.koor.tech
+  maintainers:
+  - email: zuhair@koor.tech
+    name: Zuhair AlSader
+  - email: alexander@koor.tech
+    name: Alexander Trost
+  maturity: alpha
+  provider:
+    name: Koor Technology, Inc.
+    url: koor.tech
+  version: 0.0.1
