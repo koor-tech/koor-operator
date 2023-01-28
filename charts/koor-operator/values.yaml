@@ -13,7 +13,7 @@ controllerManager:
   manager:
     image:
       repository: localhost:5000/koor-operator
-      tag: v1alpha1
+      tag: v0.0.1
     resources:
       limits:
         cpu: 500m

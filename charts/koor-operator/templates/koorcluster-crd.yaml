@@ -1,17 +1,19 @@
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  name: koorclusters.storage.koor.tech
   annotations:
     controller-gen.kubebuilder.io/version: v0.10.0
-  name: koorclusters.storage.koor.tech
+  labels:
+  {{- include "koor-operator.labels" . | nindent 4 }}
 spec:
   conversion:
     strategy: Webhook
     webhook:
       clientConfig:
         service:
-          name: koor-operator-webhook-service
-          namespace: koor-operator-system
+          name: '{{ include "koor-operator.fullname" . }}-webhook-service'
+          namespace: '{{ .Release.Namespace }}'
           path: /convert
       conversionReviewVersions:
       - v1
@@ -103,3 +105,9 @@ spec:
     storage: true
     subresources:
       status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

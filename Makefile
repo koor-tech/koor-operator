@@ -115,7 +115,8 @@ local-certs: ## Generate the certs required to run webhooks locally
 
 .PHONY: helm
 helm: manifests kustomize helmify ## Generate the koor-operator helm chart
-	$(KUSTOMIZE) build config/default | $(HELMIFY) -crd-dir -v -image-pull-secrets charts/koor-operator
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -image-pull-secrets charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 
 ##@ Build
