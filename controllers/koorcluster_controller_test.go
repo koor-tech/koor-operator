@@ -158,7 +158,7 @@ var _ = Describe("KoorCluster controller", func() {
 				},
 				Status: core.NodeStatus{
 					Capacity: core.ResourceList{
-						core.ResourceCPU:              resource.MustParse("4"),
+						core.ResourceCPU:              resource.MustParse("8"),
 						core.ResourceMemory:           resource.MustParse("40G"),
 						core.ResourceEphemeralStorage: resource.MustParse("400G"),
 					},
@@ -191,7 +191,7 @@ var _ = Describe("KoorCluster controller", func() {
 				}
 				return updatedKoorCluster.Status.TotalResources.Nodes.Equal(resource.MustParse("4"))
 			}, "5s").Should(BeTrue())
-			Expect(updatedKoorCluster.Status.TotalResources.Cpu.Equal(resource.MustParse("16"))).To(BeTrue())
+			Expect(updatedKoorCluster.Status.TotalResources.Cpu.Equal(resource.MustParse("20"))).To(BeTrue())
 			Expect(updatedKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("100G"))).To(BeTrue())
 			Expect(updatedKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("1000G"))).To(BeTrue())
 			Expect(updatedKoorCluster.Status.MeetsMinimumResources).To(BeTrue())
