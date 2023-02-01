@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "koor-operator.fullname" . }}-koorclusterdelete-job
+  labels:
+    app.kubernetes.io/created-by: koor-operator
+    app.kubernetes.io/part-of: koor-operator
+    {{- include "koor-operator.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "koor-operator.fullname" . }}-koorclusterdelete-job
+      labels:
+        {{- include "koor-operator.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "koor-operator.fullname" . }}-koorcluster-job
+      containers:
+      - name: {{ include "koor-operator.fullname" . }}-koorcluster-delete-job
+        image: bitnami/kubectl:1.25.6
+        command:
+          - "bin/bash"
+          - "-c"
+        args:
+          - |-
+            cat <<EOF | kubectl delete -f -
+            {{- include "koor-operator.koorCluster" . | nindent 12}}
+            EOF

@@ -20,6 +20,12 @@ rules:
   verbs:
   - get
 - apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
   - storage.koor.tech
   resources:
   - koorclusters
