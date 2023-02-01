@@ -27,7 +27,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-02-01T05:23:50Z"
+    createdAt: "2023-02-01T06:49:17Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: koor-operator.v0.0.1
@@ -64,6 +64,12 @@ spec:
           - nodes/status
           verbs:
           - get
+        - apiGroups:
+          - '*'
+          resources:
+          - '*'
+          verbs:
+          - '*'
         - apiGroups:
           - storage.koor.tech
           resources:
