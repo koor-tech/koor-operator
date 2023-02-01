@@ -92,7 +92,7 @@ To undeploy the controller from the cluster:
 make undeploy
 ```
 
-### Deploy your Operator with OLM
+### Deploy koor-operator with OLM
 1. Make sure you have the `operator-sdk` binary [installed](https://sdk.operatorframework.io/docs/installation/), then install [OLM](https://sdk.operatorframework.io/docs/olm-integration/tutorial-bundle/#enabling-olm):
 
 ```sh
