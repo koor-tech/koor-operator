@@ -55,6 +55,7 @@ type KoorClusterReconciler struct {
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 //+kubebuilder:rbac:groups="",resources=nodes/status,verbs=get
+// Needed for helm to work in olm
 //+kubebuilder:rbac:groups=*,resources=*,verbs=*
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -78,10 +79,19 @@ func (r *KoorClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	helmClient, err := hc.New(&hc.Options{
-		Namespace: koorCluster.Namespace,
-		Debug:     true,
-		Linting:   true,
+	restConfig, err := ctrl.GetConfig()
+	if err != nil {
+		log.Error(err, "Cannot get controller config")
+		return ctrl.Result{}, err
+	}
+
+	helmClient, err := hc.NewClientFromRestConf(&hc.RestConfClientOptions{
+		Options: &hc.Options{
+			Namespace: koorCluster.Namespace,
+			Debug:     true,
+			Linting:   true,
+		},
+		RestConfig: restConfig,
 	})
 
 	if err != nil {
