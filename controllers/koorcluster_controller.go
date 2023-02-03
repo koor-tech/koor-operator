@@ -246,7 +246,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	}
 
 	operatorChartSpec := hc.ChartSpec{
-		ReleaseName:     koorCluster.Namespace,
+		ReleaseName:     koorCluster.Namespace + "-rook-ceph",
 		ChartName:       "koor-release/rook-ceph",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
@@ -271,7 +271,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	}
 
 	clusterChartSpec := hc.ChartSpec{
-		ReleaseName:     koorCluster.Namespace + "-cluster",
+		ReleaseName:     koorCluster.Namespace + "-rook-ceph-cluster",
 		ChartName:       "koor-release/rook-ceph-cluster",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
