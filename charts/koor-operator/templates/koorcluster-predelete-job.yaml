@@ -26,6 +26,6 @@ spec:
           - "-c"
         args:
           - |-
-            cat <<EOF | kubectl delete -f -
+            cat <<EOF | kubectl delete -f - --ignore-not-found
             {{- include "koor-operator.koorCluster" . | nindent 12}}
             EOF
