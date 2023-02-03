@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "koor-operator.fullname" . }}-selfsigned-issuer
+  labels:
+  {{- include "koor-operator.labels" . | nindent 4 }}
+spec:
+  selfSigned: {}

@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "koor-operator.fullname" . }}-koorcluster-job
+  labels:
+    app.kubernetes.io/created-by: koor-operator
+    app.kubernetes.io/part-of: koor-operator
+    {{- include "koor-operator.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade,post-rollback
+    helm.sh/hook-delete-policy: hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "koor-operator.fullname" . }}-koorcluster-job
+      labels:
+        {{- include "koor-operator.labels" . | nindent 8 }}
+    spec:
+      restartPolicy: OnFailure
+      serviceAccountName: {{ include "koor-operator.fullname" . }}-koorcluster-job
+      containers:
+      - name: {{ include "koor-operator.fullname" . }}-koorcluster-install-job
+        image: bitnami/kubectl:1.25.6
+        command:
+          - "bin/bash"
+          - "-c"
+        args:
+          - |-
+            sleep 1;
+            {{- if and .Values.koorCluster.createNamespace .Values.koorCluster.namespace }}
+            kubectl create namespace {{ .Values.koorCluster.namespace }} --dry-run=client -o yaml | kubectl apply -f -;
+            {{- end }}
+            cat <<EOF | kubectl apply -f -
+            {{- include "koor-operator.koorCluster" . | nindent 12 }}
+            EOF

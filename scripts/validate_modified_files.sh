@@ -4,7 +4,7 @@ set -ex
 #############
 # VARIABLES #
 #############
-CRD_ERR="changes found by 'make crds'. please run 'make crds' locally and update your PR"
+HELM_ERR="changes found by 'make helm'. please run 'make helm' locally and update your PR"
 
 #############
 # FUNCTIONS #
@@ -25,10 +25,10 @@ function validate(){
 # MAIN #
 ########
 case "$1" in
-  crd)
-    validate "$CRD_ERR"
+  helm)
+    validate "$HELM_ERR"
   ;;
   *)
-    echo $"Usage: $0 {crd}"
+    echo $"Usage: $0 {helm}"
     exit 1
 esac
