@@ -7,7 +7,7 @@ kind: KoorCluster
 metadata:
   name: {{ include "koor-operator.fullname" . }}-koorcluster
   {{- if .Values.koorCluster.namespace }}
-  namespace: {{ .Values.koorCluster.namespace }}
+  namespace: {{ .Release.Namespace }}
   {{- end }}
   labels:
     app.kubernetes.io/created-by: koor-operator
