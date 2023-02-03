@@ -7,9 +7,6 @@ on:
       - main
       - release-*
   pull_request:
-    branches:
-      - main
-      - release-*
 
 # cancel the in-progress workflow when PR is refreshed.
 concurrency:
