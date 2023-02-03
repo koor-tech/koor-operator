@@ -9,12 +9,23 @@ metadata:
   {{- include "koor-operator.labels" . | nindent 4 }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: {{ include "koor-operator.fullname" . }}-job-role
   labels:
   {{- include "koor-operator.labels" . | nindent 4 }}
 rules:
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - update
+  - watch
 - apiGroups:
   - storage.koor.tech
   resources:
@@ -29,7 +40,7 @@ rules:
   - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: {{ include "koor-operator.fullname" . }}-job-rolebinding
   labels:
@@ -39,7 +50,7 @@ metadata:
   {{- include "koor-operator.labels" . | nindent 4 }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: '{{ include "koor-operator.fullname" . }}-job-role'
 subjects:
 - kind: ServiceAccount
