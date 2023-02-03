@@ -1,5 +1,6 @@
 # koor-operator
 An operator that installs Koor Storage Distro
+
 ## Description
 This operator is equivalent to the following commands:
 
@@ -30,51 +31,20 @@ minikube addons enable registry
 sudo docker run -d --network=host alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
 
-4. Use `localhost:5000` as `<some-registry>` in the commands below.
-
-### Running on the cluster
-1. Install Instances of Custom Resources:
+4. Set the registry domain as `localhost:5000`
 
 ```sh
-kubectl apply -f config/samples/
+export REGISTRY_DOMAIN=localhost:5000
 ```
 
-2. Build and push your image to the location specified by `IMG`:
+## Run the operator
+There are three ways to run the operator:
 
-```sh
-make docker-build docker-push IMG=<some-registry>/koor-operator:tag
-```
+1. As a Go program outside a cluster
+2. As a Deployment inside a Kubernetes cluster
+3. Managed by the [Operator Lifecycle Manager (OLM)](https://sdk.operatorframework.io/docs/olm-integration/tutorial-bundle/#enabling-olm) in [bundle](https://sdk.operatorframework.io/docs/olm-integration/quickstart-bundle/) format
 
-3. Deploy the controller to the cluster with the image specified by `IMG`:
-
-```sh
-make deploy IMG=<some-registry>/koor-operator:tag
-```
-
-### Uninstall CRDs
-To delete the CRDs from the cluster:
-
-```sh
-make uninstall
-```
-
-### Undeploy controller
-UnDeploy the controller to the cluster:
-
-```sh
-make undeploy
-```
-
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
-
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
-
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
-which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
-
-### Test It Out
+### Run locally outside the cluster
 1. Generate certificates for local testing:
 
 ```sh
@@ -94,6 +64,80 @@ make run
 ```
 
 **NOTE:** You can also run this in one step by running: `make local-certs install run`
+
+#### Uninstall CRDs
+To delete the CRDs from the cluster:
+
+```sh
+make uninstall
+```
+
+### Runing as a Deployment inside the cluster
+1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+
+```sh
+make docker-build docker-push
+```
+
+2. Deploy the controller to the cluster with the image specified by `IMG`:
+
+```sh
+make deploy
+```
+
+#### Undeploy controller
+To undeploy the controller from the cluster:
+
+```sh
+make undeploy
+```
+
+### Deploy koor-operator with OLM
+1. Make sure you have the `operator-sdk` binary [installed](https://sdk.operatorframework.io/docs/installation/), then install [OLM](https://sdk.operatorframework.io/docs/olm-integration/tutorial-bundle/#enabling-olm):
+
+```sh
+operator-sdk olm install
+```
+
+2. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+
+```sh
+make docker-build docker-push
+```
+
+3. Bundle the operator, then build and push the bundle image:
+
+```sh
+make bundle bundle-build bundle-push
+```
+
+4. Run the bundle:
+
+```sh
+operator-sdk run bundle <some registry>/koor-operator-bundle:v0.0.1
+```
+
+For example, using a local registry, the command becomes:
+
+```sh
+operator-sdk run bundle localhost:5000/koor-operator-bundle:v0.0.1 --use-http
+```
+
+### Create the KoorCluster Custom Resource
+Update the samples in `config/samples/...` to fit your needs then create the Custom Resource:
+
+```sh
+kubectl apply -f config/samples/storage_v1alpha1_koorcluster.yaml
+```
+
+## Contributing
+// TODO(user): Add detailed information on how you would like others to contribute to this project
+
+### How it works
+This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
+which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:

@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: localhost:5000/koor-operator
-  newTag: v1alpha1
+  newTag: v0.0.1

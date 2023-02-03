@@ -65,12 +65,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace))
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph"))
 						return nil, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-cluster"))
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph-cluster"))
 						return nil, nil
 					}),
 			)
@@ -170,12 +170,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace))
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph"))
 						return nil, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-cluster"))
+						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph-cluster"))
 						return nil, nil
 					}),
 			)
