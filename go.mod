@@ -9,10 +9,10 @@ require (
 	github.com/onsi/ginkgo/v2 v2.8.1
 	github.com/onsi/gomega v1.26.0
 	helm.sh/helm/v3 v3.10.2
-	k8s.io/api v0.25.3
-	k8s.io/apimachinery v0.25.3
+	k8s.io/api v0.26.1
+	k8s.io/apimachinery v0.26.1
 	k8s.io/client-go v0.25.3
-	k8s.io/utils v0.0.0-20221012122500-cfd413dd9e85
+	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d
 	sigs.k8s.io/controller-runtime v0.13.0
 )
 
