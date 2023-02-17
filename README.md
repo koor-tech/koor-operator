@@ -12,12 +12,12 @@ helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
 ```
 
 ## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [minikube](https://minikube.sigs.k8s.io/docs/start/) to get a local cluster for testing, or run against a remote cluster.
+You’ll need a Kubernetes cluster to run against. You can use [minikube](https://minikube.sigs.k8s.io/docs/start/) to get a local cluster for testing or run against a remote cluster.
 
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
+**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e., whatever cluster `kubectl cluster-info` shows).
 
 ### Use a Local Docker Registry with Minikube
-1. Make sure that minikube is started with `--insecure-registry="localhost:5000"`. You might need to delete and restart minikube.
+1. Make sure you start minikube with `--insecure-registry="localhost:5000"`. You might need to delete and restart minikube.
 
 2. Enable the minikube [registry plugin](https://minikube.sigs.k8s.io/docs/handbook/registry/#docker-on-macos):
 
@@ -72,14 +72,20 @@ To delete the CRDs from the cluster:
 make uninstall
 ```
 
-### Runing as a Deployment inside the cluster
+### Running as a Deployment inside the cluster
 1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
 
 ```sh
 make docker-build docker-push
 ```
 
-2. Deploy the controller to the cluster with the image specified by `IMG`:
+2. Install `cert-manager` if not already installed:
+
+```sh
+make cert-manager
+```
+
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy
@@ -90,6 +96,13 @@ To undeploy the controller from the cluster:
 
 ```sh
 make undeploy
+```
+
+#### Undeploy `cert-manager`
+To undeploy `cert-manager` from the cluster:
+
+```sh
+make undeploy-cert-manager
 ```
 
 ### Deploy koor-operator with OLM
@@ -124,7 +137,7 @@ operator-sdk run bundle localhost:5000/koor-operator-bundle:v0.0.1 --use-http
 ```
 
 ### Create the KoorCluster Custom Resource
-Update the samples in `config/samples/...` to fit your needs then create the Custom Resource:
+Update the samples in `config/samples/...` to fit your needs, then create the Custom Resource:
 
 ```sh
 kubectl apply -f config/samples/storage_v1alpha1_koorcluster.yaml
@@ -136,8 +149,8 @@ kubectl apply -f config/samples/storage_v1alpha1_koorcluster.yaml
 ### How it works
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/)
-which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster
+It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/),
+which provide a reconcile function responsible for synchronizing resources until the cluster reaches the desired state.
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
