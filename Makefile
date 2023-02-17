@@ -119,6 +119,17 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -image-pull-secrets charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 
+
+.PHONY: ensure-generate-is-noop
+ensure-generate-is-noop: generate bundle helm
+	@# on make bundle config/manager/kustomization.yaml includes changes, which should be ignored for the below check
+	@git restore config/manager/kustomization.yaml
+	@git diff -s --exit-code api/v1alpha1/zz_generated.*.go || (echo "Build failed: a model has been changed but the generated resources aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
+	@git diff -s --exit-code bundle config || (echo "Build failed: the bundle, config files have been changed but the generated bundle, config files aren't up to date. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
+	@git diff -s --exit-code bundle.Dockerfile || (echo "Build failed: the bundle.Dockerfile file has been changed. The file should be the same as generated one. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
+	@git diff -s --exit-code charts || (echo "Build failed: the helm chart files have been changed but the generated helm chart files aren't up to date. Run 'make helm' and update your PR." && git --no-pager diff && exit 1)
+
+
 ##@ Build
 
 .PHONY: build
@@ -158,12 +169,12 @@ docker-buildx: test ## Build and push docker image for the manager for cross-pla
 	rm Dockerfile.cross
 
 .PHONY: bundle
-bundle: manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
-	operator-sdk generate kustomize manifests -q
+bundle: operator-sdk manifests kustomize ## Generate bundle manifests and metadata, then validate generated files.
+	$(OPERATOR_SDK) generate kustomize manifests -q
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(IMG)
-	$(KUSTOMIZE) build config/manifests | operator-sdk generate bundle $(BUNDLE_GEN_FLAGS)
+	$(KUSTOMIZE) build config/manifests | $(OPERATOR_SDK) generate bundle $(BUNDLE_GEN_FLAGS)
 	./scripts/ignore_created_at.sh
-	operator-sdk bundle validate ./bundle
+	$(OPERATOR_SDK) bundle validate ./bundle
 
 .PHONY: bundle-build
 bundle-build: ## Build the bundle image.
@@ -231,12 +242,14 @@ CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 HELMIFY ?= $(LOCALBIN)/helmify
 CMCTL ?= $(LOCALBIN)/cmctl
+OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.10.0
 HELMIFY_VERSION ?= v0.3.22
 CERTMANAGER_VERSION ?= v1.11.0
+OPERATOR_SDK_VERSION ?= 1.26.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -248,6 +261,12 @@ $(KUSTOMIZE): $(LOCALBIN)
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
 $(CONTROLLER_GEN): $(LOCALBIN)
 	test -s $(LOCALBIN)/controller-gen || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-tools/cmd/controller-gen@$(CONTROLLER_TOOLS_VERSION)
+
+.PHONY: operator-sdk
+operator-sdk: $(OPERATOR_SDK) ## Download operator-sdk locally if necessary.
+$(OPERATOR_SDK): $(LOCALBIN)
+	test -s $(OPERATOR_SDK) || curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_`go env GOOS`_`go env GOARCH`
+	@chmod +x $(OPERATOR_SDK)
 
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
