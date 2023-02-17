@@ -79,7 +79,13 @@ make uninstall
 make docker-build docker-push
 ```
 
-2. Deploy the controller to the cluster with the image specified by `IMG`:
+2. Install `cert-manager` if not already installed:
+
+```sh
+make cert-manager
+```
+
+3. Deploy the controller to the cluster with the image specified by `IMG`:
 
 ```sh
 make deploy
@@ -90,6 +96,13 @@ To undeploy the controller from the cluster:
 
 ```sh
 make undeploy
+```
+
+#### Undeploy `cert-manager`
+To undeploy `cert-manager` from the cluster:
+
+```sh
+make undeploy-cert-manager
 ```
 
 ### Deploy koor-operator with OLM

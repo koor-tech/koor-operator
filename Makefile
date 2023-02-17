@@ -192,11 +192,13 @@ KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 HELMIFY ?= $(LOCALBIN)/helmify
+CMCTL ?= $(LOCALBIN)/cmctl
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.10.0
 HELMIFY_VERSION ?= v0.3.22
+CERTMANAGER_VERSION ?= v1.11.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -275,3 +277,29 @@ catalog-push: ## Push a catalog image.
 helmify: $(HELMIFY) ## Download helmify locally if necessary.
 $(HELMIFY):
 	test -s $(LOCALBIN)/helmify || GOBIN=$(LOCALBIN) go install github.com/arttor/helmify/cmd/helmify@$(HELMIFY_VERSION)
+
+.PHONY: cert-manager
+cert-manager: cmctl
+	# Consider using cmctl to install the cert-manager once install command is not experimental
+	kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v${CERTMANAGER_VERSION}/cert-manager.yaml
+	$(CMCTL) check api --wait=5m
+
+.PHONY: undeploy-cert-manager
+undeploy-cert-manager:
+	kubectl delete --ignore-not-found=true -f https://github.com/jetstack/cert-manager/releases/download/v${CERTMANAGER_VERSION}/cert-manager.yaml
+
+.PHONY: cmctl
+cmctl: $(CMCTL)
+$(CMCTL): $(LOCALBIN)
+	@{ \
+	set -e ;\
+	if (`pwd`/bin/cmctl version | grep ${CERTMANAGER_VERSION}) > /dev/null 2>&1 ; then \
+		exit 0; \
+	fi ;\
+	TMP_DIR=$$(mktemp -d) ;\
+	curl -L -o $$TMP_DIR/cmctl.tar.gz https://github.com/jetstack/cert-manager/releases/download/v$(CERTMANAGER_VERSION)/cmctl-`go env GOOS`-`go env GOARCH`.tar.gz ;\
+	tar xzf $$TMP_DIR/cmctl.tar.gz -C $$TMP_DIR ;\
+	[ -d bin ] || mkdir bin ;\
+	mv $$TMP_DIR/cmctl $(CMCTL) ;\
+	rm -rf $$TMP_DIR ;\
+	}
