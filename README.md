@@ -38,11 +38,12 @@ export REGISTRY_DOMAIN=localhost:5000
 ```
 
 ## Run the operator
-There are three ways to run the operator:
+There are four ways to run the operator:
 
 1. As a Go program outside a cluster
 2. As a Deployment inside a Kubernetes cluster
 3. Managed by the [Operator Lifecycle Manager (OLM)](https://sdk.operatorframework.io/docs/olm-integration/tutorial-bundle/#enabling-olm) in [bundle](https://sdk.operatorframework.io/docs/olm-integration/quickstart-bundle/) format
+4. Using [helm](https://helm.sh/)
 
 ### Run locally outside the cluster
 1. Generate certificates for local testing:
@@ -136,8 +137,34 @@ For example, using a local registry, the command becomes:
 operator-sdk run bundle localhost:5000/koor-operator-bundle:v0.0.1 --use-http
 ```
 
-### Create the KoorCluster Custom Resource
-Update the samples in `config/samples/...` to fit your needs, then create the Custom Resource:
+### Install using Helm
+1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+
+```sh
+make docker-build docker-push
+```
+
+2. Install `cert-manager` if not already installed:
+
+```sh
+make cert-manager
+```
+
+1. Install the helm chart to the cluster. Create a `values.yaml` file if necessary.
+
+```sh
+helm install koor-operator --namespace koor-operator --create-namespace charts/koor-operator
+```
+
+#### Uninstall helm chart
+To undeploy the controller from the cluster:
+
+```sh
+helm uninstall koor-operator --namespace koor-operator
+```
+
+## Create the KoorCluster Custom Resource
+When deploying the operator locally, as a deployment, or using the OLM, you need to create a KoorCluster custom resource. To do that, update the samples in `config/samples/...` to fit your needs, then create the Custom Resource:
 
 ```sh
 kubectl apply -f config/samples/storage_v1alpha1_koorcluster.yaml
