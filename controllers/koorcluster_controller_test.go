@@ -37,6 +37,8 @@ var _ = Describe("KoorCluster controller", func() {
 	const (
 		KoorClusterNamePrefix = "test-koorcluster-"
 		KoorClusterNamespace  = "default"
+		RookReleaseName       = KoorClusterNamespace + "-rook-ceph"
+		ClusterReleaseName    = KoorClusterNamespace + "-rook-ceph-cluster"
 
 		timeout  = time.Second * 10
 		duration = time.Second * 10
@@ -65,12 +67,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph"))
+						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
 						return nil, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph-cluster"))
+						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
 						return nil, nil
 					}),
 			)
@@ -170,12 +172,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph"))
+						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
 						return nil, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(KoorClusterNamespace + "-rook-ceph-cluster"))
+						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
 						return nil, nil
 					}),
 			)
@@ -201,8 +203,8 @@ var _ = Describe("KoorCluster controller", func() {
 	Context("When finalizing a KoorCluster", func() {
 		It("Should uninstall the operator and the cluster helm charts", func() {
 			gomock.InOrder(
-				mockHelmClient.EXPECT().UninstallReleaseByName(KoorClusterNamespace+"-cluster").Return(nil).Times(1),
-				mockHelmClient.EXPECT().UninstallReleaseByName(KoorClusterNamespace).Return(nil).Times(1),
+				mockHelmClient.EXPECT().UninstallReleaseByName(ClusterReleaseName).Return(nil).Times(1),
+				mockHelmClient.EXPECT().UninstallReleaseByName(RookReleaseName).Return(nil).Times(1),
 			)
 
 			By("By creating a KoorCluster with Finalizer")
