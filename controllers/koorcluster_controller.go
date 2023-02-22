@@ -296,16 +296,14 @@ func (r *KoorClusterReconciler) handleFinalizer(ctx context.Context, koorCluster
 		return nil
 	}
 
-	releaseName := koorCluster.Namespace + "-cluster"
+	releaseName := koorCluster.Namespace + "-rook-ceph-cluster"
 	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
 		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
-		return err
 	}
 
-	releaseName = koorCluster.Namespace
+	releaseName = koorCluster.Namespace + "-rook-ceph"
 	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
 		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
-		return err
 	}
 
 	// remove our finalizer from the list and update it.
