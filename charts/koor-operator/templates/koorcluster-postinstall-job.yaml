@@ -27,9 +27,6 @@ spec:
         args:
           - |-
             sleep 1;
-            {{- if and .Values.koorCluster.createNamespace .Values.koorCluster.namespace }}
-            kubectl create namespace {{ .Values.koorCluster.namespace }} --dry-run=client -o yaml | kubectl apply -f -;
-            {{- end }}
             cat <<EOF | kubectl apply -f -
             {{- include "koor-operator.koorCluster" . | nindent 12 }}
             EOF

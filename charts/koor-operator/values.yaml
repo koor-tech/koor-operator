@@ -41,8 +41,6 @@ webhookService:
 # This is appeneded to values.yaml from additional-values.yaml. This is a hack to avoid getting these values overwritten by helmify
 
 koorCluster:
-  namespace: rook-ceph
-  createNamespace: true
   spec:
     useAllDevices: true
     monitoringEnabled: true
