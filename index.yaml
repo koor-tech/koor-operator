@@ -1,0 +1,15 @@
+apiVersion: v1
+entries:
+  koor-operator:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2023-02-28T21:50:19.858481259Z"
+    description: A Helm chart for deploying the Koor Operator to Kubernetes
+    digest: 5c28bcb1fa70f2b217377ac0cca4e42bfbcdda2dda9bfedd421ff26292a74d4d
+    kubeVersion: '>=1.19.0'
+    name: koor-operator
+    type: application
+    urls:
+    - https://github.com/koor-tech/koor-operator/releases/download/koor-operator-0.1.0/koor-operator-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-02-28T21:50:19.85848886Z"
