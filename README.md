@@ -31,10 +31,10 @@ minikube addons enable registry
 sudo docker run -d --network=host alpine/socat TCP-LISTEN:5000,reuseaddr,fork TCP:$(minikube ip):5000
 ```
 
-4. Set the registry domain as `localhost:5000`
+1. Set the registry as `localhost:5000`
 
 ```sh
-export REGISTRY_DOMAIN=localhost:5000
+export REGISTRY_HOST=localhost:5000
 ```
 
 ## Run the operator

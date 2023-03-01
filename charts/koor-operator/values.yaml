@@ -12,7 +12,7 @@ controllerManager:
         memory: 64Mi
   manager:
     image:
-      repository: localhost:5000/koor-operator
+      repository: docker.io/koorinc/koor-operator
       tag: v0.0.1
     resources:
       limits:
