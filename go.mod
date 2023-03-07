@@ -7,7 +7,7 @@ require (
 	github.com/golang/mock v1.6.0
 	github.com/mittwald/go-helm-client v0.11.5
 	github.com/onsi/ginkgo/v2 v2.8.4
-	github.com/onsi/gomega v1.27.1
+	github.com/onsi/gomega v1.27.2
 	helm.sh/helm/v3 v3.11.1
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
