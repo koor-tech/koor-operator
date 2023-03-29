@@ -6,9 +6,9 @@ This operator is equivalent to the following commands:
 
 ```sh
 helm repo add koor-release https://charts.koor.tech/release
-helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
-helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
-   --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+helm install --create-namespace --namespace <namespace> <namespace>-rook-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
+helm install --create-namespace --namespace <namespace> <namespace>-rook-ceph-cluster \
+    --set operatorNamespace=<namespace> koor-release/rook-ceph-cluster -f utils/clusterValues.yaml
 ```
 
 ## Getting Started

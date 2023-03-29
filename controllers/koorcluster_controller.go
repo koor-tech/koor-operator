@@ -237,7 +237,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	}
 
 	// Install rook operator
-	// helm install --create-namespace --namespace koor-ceph koor-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
+	// helm install --create-namespace --namespace <namespace> <namespace>-rook-ceph koor-release/rook-ceph -f utils/operatorValues.yaml
 	operatorBuffer := new(bytes.Buffer)
 	err = templates.ExecuteTemplate(operatorBuffer, "operatorValues.yaml", koorCluster)
 	if err != nil {
@@ -261,8 +261,8 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	}
 
 	// Install rook cluster
-	// helm install --create-namespace --namespace koor-ceph koor-ceph-cluster \
-	//     --set operatorNamespace=koor-ceph koor-release/rook-ceph-cluster -f values-override.yaml
+	// helm install --create-namespace --namespace <namespace> <namespace>-rook-ceph-cluster \
+	//     --set operatorNamespace=<namespace> koor-release/rook-ceph-cluster -f utils/clusterValues.yaml
 	clusterBuffer := new(bytes.Buffer)
 	err = templates.ExecuteTemplate(clusterBuffer, "clusterValues.yaml", koorCluster)
 	if err != nil {
