@@ -68,7 +68,7 @@ SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
 .PHONY: all
-all: build
+all: build helm bundle
 
 ##@ General
 
@@ -122,6 +122,7 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -image-pull-secrets charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
+	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
 
 
 .PHONY: ensure-generate-is-noop
