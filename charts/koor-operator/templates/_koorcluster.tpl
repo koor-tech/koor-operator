@@ -16,3 +16,10 @@ metadata:
 spec:
 {{ toYaml .Values.koorCluster.spec | indent 2 }}
 {{- end }}
+
+{{/*
+Koor cluster job that installs the custom resource
+*/}}
+{{- define "koor-operator.jobName" -}}
+{{- include "koor-operator.fullname" . }}-koorcluster-job
+{{- end }}

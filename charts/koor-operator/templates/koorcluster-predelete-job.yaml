@@ -17,7 +17,7 @@ spec:
         {{- include "koor-operator.labels" . | nindent 8 }}
     spec:
       restartPolicy: OnFailure
-      serviceAccountName: {{ include "koor-operator.fullname" . }}-koorcluster-job
+      serviceAccountName: {{ include "koor-operator.jobName" . }}
       containers:
       - name: {{ include "koor-operator.fullname" . }}-koorcluster-delete-job
         image: bitnami/kubectl:1.25.6
@@ -26,6 +26,7 @@ spec:
           - "-c"
         args:
           - |-
+            kubectl delete -n job {{ include "koor-operator.jobName" . }} --ignore-not-found
             cat <<EOF | kubectl delete -f - --ignore-not-found
             {{- include "koor-operator.koorCluster" . | nindent 12}}
             EOF

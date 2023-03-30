@@ -74,7 +74,7 @@ make uninstall
 ```
 
 ### Running as a Deployment inside the cluster
-1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_HOST)/koor-operator:v$(VERSION)`:
 
 ```sh
 make docker-build docker-push
@@ -113,7 +113,7 @@ make undeploy-cert-manager
 operator-sdk olm install
 ```
 
-2. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+2. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_HOST)/koor-operator:v$(VERSION)`:
 
 ```sh
 make docker-build docker-push
@@ -138,19 +138,13 @@ operator-sdk run bundle localhost:5000/koor-operator-bundle:v0.0.1 --use-http
 ```
 
 ### Install using Helm
-1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_DOMAIN)/koor-operator:v$(VERSION)`:
+1. Build and push your image to the registry. If `IMG` is not specified, it defaults to `$(REGISTRY_HOST)/koor-operator:v$(VERSION)`:
 
 ```sh
 make docker-build docker-push
 ```
 
-2. Install `cert-manager` if not already installed:
-
-```sh
-make cert-manager
-```
-
-1. Install the helm chart to the cluster. Create a `values.yaml` file if necessary.
+2. Install the helm chart to the cluster. Create a `values.yaml` file if necessary.
 
 ```sh
 helm install koor-operator --namespace koor-operator --create-namespace charts/koor-operator

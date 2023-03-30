@@ -27,3 +27,10 @@ appVersion: "v0.1.0"
 # Helm will validate the version constraints when installing the chart and fail if the cluster
 # runs an unsupported Kubernetes version.
 kubeVersion: ">=1.19.0"
+
+dependencies:
+  - name: cert-manager
+    repository: https://charts.jetstack.io
+    version: v1.11.0
+    condition: certmanager.enabled
+    alias: certmanager
