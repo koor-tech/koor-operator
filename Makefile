@@ -120,9 +120,10 @@ local-certs: ## Generate the certs required to run webhooks locally
 .PHONY: helm
 helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -image-pull-secrets charts/koor-operator
+	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
+	sed -i 's/^\certManager:/certmanager:/' charts/koor-operator/values.yaml
 
 
 .PHONY: ensure-generate-is-noop
@@ -252,7 +253,7 @@ OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.10.0
-HELMIFY_VERSION ?= v0.3.22
+HELMIFY_VERSION ?= v0.3.34
 CERTMANAGER_VERSION ?= 1.11.0
 OPERATOR_SDK_VERSION ?= 1.26.0
 

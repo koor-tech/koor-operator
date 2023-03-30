@@ -1,5 +1,13 @@
+certManager:
+  enabled: true
+  installCRDs: true
 controllerManager:
   kubeRbacProxy:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
     image:
       repository: gcr.io/kubebuilder/kube-rbac-proxy
       tag: v0.13.0
@@ -11,18 +19,22 @@ controllerManager:
         cpu: 5m
         memory: 64Mi
   manager:
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+        - ALL
     image:
       repository: docker.io/koorinc/koor-operator
       tag: v0.1.0
     resources:
       limits:
         cpu: 500m
-        memory: 128Mi
+        memory: 512Mi
       requests:
         cpu: 10m
-        memory: 64Mi
+        memory: 128Mi
   replicas: 1
-imagePullSecrets: []
 kubernetesClusterDomain: cluster.local
 metricsService:
   ports:

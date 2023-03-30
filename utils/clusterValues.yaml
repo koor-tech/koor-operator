@@ -1,5 +1,5 @@
 # Namespace of the main rook operator
-operatorNamespace: {{ .Namespace }}-rook-ceph
+operatorNamespace: {{ .Namespace }}
 
 # Ability to override ceph.conf
 configOverride: |
