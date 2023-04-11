@@ -18,8 +18,8 @@ spec:
   description: An operator that installs Koor Storage Distro
   displayName: KoorCluster
   icon:
-  - base64data: ""
-    mediatype: ""
+  - base64data: PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDM4NC4yNSAzODQuMjUiPjxwYXRoIHN0eWxlPSJmaWxsOiMxOWRkYTUiIGQ9Ik0wIDBoMzg0LjI1djM4NC4yNUgweiIvPjxwYXRoIGQ9Ik0zMDQuNzIgNzkuNTRoLTU3LjE3TDc5LjU0IDI0Ny41NXY1Ny4xN2g1Ny4xN2w1NS40Mi01NS40MiA1NS40MiA1NS40Mmg1Ny4xN3YtNTcuMTdsLTU1LjQyLTU1LjQyIDU1LjQyLTU1LjQyVjc5LjU0em0tMjI1LjE4IDBoODAuMDN2ODcuOThINzkuNTR6IiBzdHlsZT0iZmlsbDojMWQyNjI4Ii8+PC9zdmc+
+    mediatype: image/svg+xml
   install:
     spec:
       deployments: null
@@ -46,6 +46,7 @@ spec:
   - email: alexander@koor.tech
     name: Alexander Trost
   maturity: alpha
+  minKubeVersion: 1.19.0
   provider:
     name: Koor Technology, Inc.
     url: koor.tech
