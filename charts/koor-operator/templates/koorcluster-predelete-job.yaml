@@ -20,7 +20,7 @@ spec:
       serviceAccountName: {{ include "koor-operator.jobName" . }}
       containers:
       - name: {{ include "koor-operator.fullname" . }}-koorcluster-delete-job
-        image: bitnami/kubectl:1.25.6
+        image: bitnami/kubectl:1.26
         command:
           - "bin/bash"
           - "-c"

@@ -15,7 +15,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+version: 0.1.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -31,6 +31,25 @@ kubeVersion: ">=1.19.0"
 dependencies:
   - name: cert-manager
     repository: https://charts.jetstack.io
-    version: v1.11.0
+    version: v1.11.1
     condition: certmanager.enabled
     alias: certmanager
+
+keywords:
+  - storage
+  - operator
+  - rook
+  - ceph
+
+sources:
+  - https://github.com/koor-tech/koor-operator/
+
+icon: https://koor.tech/images/favicon.svg
+
+annotations:
+  # Artifacthub annotations
+  artifacthub.io/category: storage
+  artifacthub.io/operator: "true"
+  artifacthub.io/license: Apache-2.0
+  # Update this as we add more to the operator
+  artifacthub.io/operatorCapabilities: basic install
