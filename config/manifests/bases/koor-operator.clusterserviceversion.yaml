@@ -4,6 +4,8 @@ metadata:
   annotations:
     alm-examples: '[]'
     capabilities: Basic Install
+    categories: Storage
+    repository: https://github.com/koor-tech/koor-operator
   name: koor-operator.v0.0.0
   namespace: placeholder
 spec:
@@ -16,7 +18,7 @@ spec:
       name: koorclusters.storage.koor.tech
       version: v1alpha1
   description: An operator that installs Koor Storage Distro
-  displayName: KoorCluster
+  displayName: Koor Cluster
   icon:
   - base64data: PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmlld0JveD0iMCAwIDM4NC4yNSAzODQuMjUiPjxwYXRoIHN0eWxlPSJmaWxsOiMxOWRkYTUiIGQ9Ik0wIDBoMzg0LjI1djM4NC4yNUgweiIvPjxwYXRoIGQ9Ik0zMDQuNzIgNzkuNTRoLTU3LjE3TDc5LjU0IDI0Ny41NXY1Ny4xN2g1Ny4xN2w1NS40Mi01NS40MiA1NS40MiA1NS40Mmg1Ny4xN3YtNTcuMTdsLTU1LjQyLTU1LjQyIDU1LjQyLTU1LjQyVjc5LjU0em0tMjI1LjE4IDBoODAuMDN2ODcuOThINzkuNTR6IiBzdHlsZT0iZmlsbDojMWQyNjI4Ii8+PC9zdmc+
     mediatype: image/svg+xml
@@ -38,8 +40,8 @@ spec:
   - ceph
   - ksd
   links:
-  - name: Koor Operator
-    url: https://koor-operator.koor.tech
+  - name: Source Code
+    url: https://github.com/koor-tech/koor-operator
   maintainers:
   - email: zuhair@koor.tech
     name: Zuhair AlSader

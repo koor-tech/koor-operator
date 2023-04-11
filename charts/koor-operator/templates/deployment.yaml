@@ -99,6 +99,8 @@ spec:
           readOnly: true
       securityContext:
         runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: {{ include "koor-operator.fullname" . }}-controller-manager
       terminationGracePeriodSeconds: 10
       volumes:
