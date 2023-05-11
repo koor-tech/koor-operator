@@ -51,6 +51,20 @@ spec:
               monitoringEnabled:
                 description: Enable monitoring. Requires Prometheus to be pre-installed.
                 type: boolean
+              notificationOptions:
+                description: Specifies the notification options for new ceph versions
+                properties:
+                  cephImageRepository:
+                    description: The repository where the ceph image is pulled. Defaults
+                      to quai.io
+                    type: string
+                  enabled:
+                    type: boolean
+                  schedule:
+                    description: The schedule to check for new versions. Uses CRON
+                      format. Defaults to everyday at midnight
+                    type: string
+                type: object
               toolboxEnabled:
                 description: Installs a debugging toolbox deployment
                 type: boolean
