@@ -120,7 +120,11 @@ local-certs: ## Generate the certs required to run webhooks locally
 .PHONY: helm
 helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
-	$(KUSTOMIZE) build config/default | $(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
+	# We need to add the `additional-values.yaml` here because of:
+	# https://github.com/arttor/helmify/issues/67
+	# https://github.com/arttor/helmify/issues/68
+	$(KUSTOMIZE) build config/default | \
+		$(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
 	sed -i 's/^\certManager:/certmanager:/' charts/koor-operator/values.yaml
@@ -328,3 +332,41 @@ $(CMCTL): $(LOCALBIN)
 	mv $$TMP_DIR/cmctl $(CMCTL) ;\
 	rm -rf $$TMP_DIR ;\
 	}
+
+# include the common make file
+COMMON_SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
+# force the build of a linux binary when running on MacOS
+GOHOSTOS=linux
+GOHOSTARCH := $(shell go env GOHOSTARCH)
+HOST_PLATFORM := $(GOHOSTOS)_$(GOHOSTARCH)
+
+ifeq ($(origin ROOT_DIR),undefined)
+ROOT_DIR := $(abspath $(shell cd $(COMMON_SELF_DIR)/../.. && pwd -P))
+endif
+ifeq ($(origin CACHE_DIR), undefined)
+CACHE_DIR := $(ROOT_DIR)/.cache
+endif
+
+TOOLS_DIR := $(CACHE_DIR)/tools
+TOOLS_HOST_DIR := $(TOOLS_DIR)/$(HOST_PLATFORM)
+
+# ====================================================================================
+# Makefile helper functions for helm-docs: https://github.com/norwoodj/helm-docs
+#
+
+HELM_DOCS_VERSION := v1.11.0
+HELM_DOCS := $(TOOLS_HOST_DIR)/helm-docs-$(HELM_DOCS_VERSION)
+HELM_DOCS_REPO := github.com/norwoodj/helm-docs/cmd/helm-docs
+
+$(HELM_DOCS): ## Installs helm-docs
+	@echo === installing helm-docs
+	@mkdir -p $(TOOLS_HOST_DIR)/tmp
+	@GOBIN=$(TOOLS_HOST_DIR)/tmp GO111MODULE=on go install $(HELM_DOCS_REPO)@$(HELM_DOCS_VERSION)
+	@mv $(TOOLS_HOST_DIR)/tmp/helm-docs $(HELM_DOCS)
+	@rm -fr $(TOOLS_HOST_DIR)/tmp
+
+helm-docs: $(HELM_DOCS) ## Use helm-docs to generate documentation from helm charts
+	$(HELM_DOCS) -c charts/koor-operator \
+		-o README.md \
+		-t README.gotmpl.md \
+		-t _templates.gotmpl

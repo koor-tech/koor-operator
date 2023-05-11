@@ -1,9 +1,13 @@
-
 # This is appeneded to values.yaml from additional-values.yaml. This is a hack to avoid getting these values overwritten by helmify
 
+# -- Koor Cluster specification
 koorCluster:
   spec:
+    # -- If all empty + unused devices of the cluster should be used.
     useAllDevices: true
+    # -- If monitoring should be enabled, requires the prometheus-operator to be pre-installed.
     monitoringEnabled: true
+    # -- Enable the Ceph MGR dashboard.
     dashboardEnabled: true
+    # -- If the Ceph toolbox, should be deployed as well.
     toolboxEnabled: true

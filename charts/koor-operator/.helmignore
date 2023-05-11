@@ -21,3 +21,7 @@
 .idea/
 *.tmproj
 .vscode/
+
+additional-values.yaml
+README.gotmpl.md
+*.gotmpl
