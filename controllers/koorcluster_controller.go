@@ -48,6 +48,15 @@ import (
 type KoorClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	crons  CronRegistry
+}
+
+func NewKoorClusterReconciler(mgr ctrl.Manager) *KoorClusterReconciler {
+	return &KoorClusterReconciler{
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		crons:  NewCronRegistry(),
+	}
 }
 
 //+kubebuilder:rbac:groups=storage.koor.tech,resources=koorclusters,verbs=get;list;watch;create;update;patch;delete

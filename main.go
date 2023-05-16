@@ -89,10 +89,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.KoorClusterReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+	if err = controllers.NewKoorClusterReconciler(mgr).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KoorCluster")
 		os.Exit(1)
 	}
