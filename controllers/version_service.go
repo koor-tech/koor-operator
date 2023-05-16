@@ -15,13 +15,22 @@ limitations under the License.
 */
 package controllers
 
+import (
+	"fmt"
+)
+
 type VersionService interface {
-	GetCephVersion(endpoint string) (string, error)
+	LatestCephVersion(endpoint string) (string, error)
+	LatestRookVersion(endpoint string) (string, error)
 }
 
 type VersionServiceClient struct {
 }
 
-func (vc *VersionServiceClient) GetCephVersion(_ string) (string, error) {
-	return "", nil
+func (vc *VersionServiceClient) LatestCephVersion(_ string) (string, error) {
+	return "", fmt.Errorf("Not implemented")
+}
+
+func (vc *VersionServiceClient) LatestRookVersion(_ string) (string, error) {
+	return "", fmt.Errorf("Not implemented")
 }

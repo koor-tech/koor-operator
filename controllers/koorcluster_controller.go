@@ -189,7 +189,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 		return err
 	}
 
-	if err := r.reconcileNotification(ctx, koorCluster); err != nil {
+	if err := r.reconcileNotification(ctx, koorCluster, &VersionServiceClient{}); err != nil {
 		return err
 	}
 
@@ -316,7 +316,7 @@ func notificationJobName(koorCluster *storagev1alpha1.KoorCluster) string {
 	return fmt.Sprintf("%s/%s", jobName, nn.String())
 }
 
-func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster) error {
+func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, vs VersionService) error {
 	log := log.FromContext(ctx)
 	jobName := notificationJobName(koorCluster)
 	oldSchedule, ok := r.crons.Get(jobName)
@@ -352,7 +352,28 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 			return
 		}
 
-		// TODO find and update version
+		isUpdated := false
+		latestCephVersion, err := vs.LatestCephVersion(currentKoorCluster.Spec.NotificationOptions.CephEndpoint)
+		if err != nil {
+			log.Error(err, "unable to find latest ceph version")
+		} else {
+			currentKoorCluster.Status.LatestVersions.Ceph = latestCephVersion
+			isUpdated = true
+		}
+
+		latestRookVersion, err := vs.LatestRookVersion(currentKoorCluster.Spec.NotificationOptions.RookEndpoint)
+		if err != nil {
+			log.Error(err, "unable to find latest rook version")
+		} else {
+			currentKoorCluster.Status.LatestVersions.Rook = latestRookVersion
+			isUpdated = true
+		}
+
+		if isUpdated {
+			if err := r.Status().Update(ctx, currentKoorCluster); err != nil {
+				log.Error(err, "Unable to update KoorCluster status")
+			}
+		}
 	})
 
 	return err
