@@ -42,8 +42,10 @@ type KoorClusterSpec struct {
 
 type NotificationOptions struct {
 	Enabled bool `json:"enabled,omitempty"`
-	// The repository where the ceph image is pulled. Defaults to quai.io
-	CephImageRepository string `json:"cephImageRepository,omitempty"`
+	// The api endpoint used to find the ceph latest version. Defaults to quai.io/ceph/ceph
+	CephEndpoint string `json:"cephEndpoint,omitempty"`
+	// The api endpoint used to find the rook latest version. Defaults to https://api.github.com/repos/rook/rook/releases
+	RookEndpoint string `json:"rookEndpoint,omitempty"`
 	// The schedule to check for new versions. Uses CRON format. Defaults to everyday at midnight
 	Schedule string `json:"schedule,omitempty"`
 }

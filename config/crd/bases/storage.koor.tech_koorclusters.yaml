@@ -44,12 +44,16 @@ spec:
               notificationOptions:
                 description: Specifies the notification options for new ceph versions
                 properties:
-                  cephImageRepository:
-                    description: The repository where the ceph image is pulled. Defaults
-                      to quai.io
+                  cephEndpoint:
+                    description: The api endpoint used to find the ceph latest version.
+                      Defaults to quai.io/ceph/ceph
                     type: string
                   enabled:
                     type: boolean
+                  rookEndpoint:
+                    description: The api endpoint used to find the rook latest version.
+                      Defaults to https://api.github.com/repos/rook/rook/releases
+                    type: string
                   schedule:
                     description: The schedule to check for new versions. Uses CRON
                       format. Defaults to everyday at midnight

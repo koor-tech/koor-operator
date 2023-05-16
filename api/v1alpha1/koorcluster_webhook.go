@@ -40,8 +40,9 @@ func (r *KoorCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Defaulter = &KoorCluster{}
 
 const (
-	DefaultCephImageRepository = "quay.io/ceph/ceph"
-	DefaultSchedule            = "0 0 * * *"
+	DefaultCephEndpoint = "quay.io/ceph/ceph"
+	DefaultRookEndpoint = "api.github.com/repos/rook/rook/releases"
+	DefaultSchedule     = "0 0 * * *"
 )
 
 // Default implements webhook.Defaulter so a webhook will be registered for the type
@@ -61,8 +62,11 @@ func (r *KoorCluster) Default() {
 		r.Spec.ToolboxEnabled = pointer.Bool(true)
 	}
 	if r.Spec.NotificationOptions.Enabled {
-		if r.Spec.NotificationOptions.CephImageRepository == "" {
-			r.Spec.NotificationOptions.CephImageRepository = DefaultCephImageRepository
+		if r.Spec.NotificationOptions.CephEndpoint == "" {
+			r.Spec.NotificationOptions.CephEndpoint = DefaultCephEndpoint
+		}
+		if r.Spec.NotificationOptions.RookEndpoint == "" {
+			r.Spec.NotificationOptions.RookEndpoint = DefaultRookEndpoint
 		}
 		if r.Spec.NotificationOptions.Schedule == "" {
 			r.Spec.NotificationOptions.Schedule = DefaultSchedule
