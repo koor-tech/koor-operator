@@ -19,6 +19,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"reflect"
 	"text/template"
 
@@ -194,6 +195,11 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	if err := r.reconcileHelm(ctx, koorCluster, helmClient); err != nil {
 		return err
 	}
+
+	if err := r.reconcileNotification(ctx, koorCluster); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -299,6 +305,45 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 	}
 
 	return nil
+}
+
+func notificationJobName(koorCluster *storagev1alpha1.KoorCluster) string {
+	jobName := "notification"
+	nn := types.NamespacedName{
+		Name:      koorCluster.Name,
+		Namespace: koorCluster.Namespace,
+	}
+	return fmt.Sprintf("%s/%s", jobName, nn.String())
+}
+
+func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster) error {
+	log := log.FromContext(ctx)
+	jobName := notificationJobName(koorCluster)
+	oldSchedule, ok := r.crons.Get(jobName)
+	if !koorCluster.Spec.NotificationOptions.Enabled {
+		if ok {
+			// Notifications should be disabled
+			r.crons.Remove(jobName)
+		}
+		return nil
+	}
+
+	newSchedule := koorCluster.Spec.NotificationOptions.Schedule
+	if ok && newSchedule == oldSchedule {
+		// Nothing changed
+		return nil
+	}
+
+	if ok {
+		log.Info("Schedule changed, remove old", "old", oldSchedule, "new", newSchedule)
+		r.crons.Remove(jobName)
+	}
+
+	err := r.crons.Add(jobName, newSchedule, func() {
+		// TODO find and update version
+	})
+
+	return err
 }
 
 // Handle finalizer and uninstall releases

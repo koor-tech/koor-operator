@@ -41,9 +41,9 @@ func NewCronRegistry() CronRegistry {
 	return c
 }
 
-func (r *CronRegistry) Get(name string) (schedule CronSchedule, ok bool) {
-	schedule, ok = r.schedules[name]
-	return
+func (r *CronRegistry) Get(name string) (string, bool) {
+	cs, ok := r.schedules[name]
+	return cs.Schedule, ok
 }
 
 func (r *CronRegistry) Add(name string, schedule string, cmd func()) error {
@@ -61,11 +61,11 @@ func (r *CronRegistry) Add(name string, schedule string, cmd func()) error {
 }
 
 func (r *CronRegistry) Remove(name string) error {
-	schedule, ok := r.Get(name)
+	cs, ok := r.schedules[name]
 	if !ok {
 		return errors.New("Cron not found")
 	}
-	r.crons.Remove(schedule.ID)
+	r.crons.Remove(cs.ID)
 	delete(r.schedules, name)
 	return nil
 }
