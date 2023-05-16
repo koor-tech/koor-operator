@@ -178,6 +178,25 @@ func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Re
 	return requests
 }
 
+func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+	log := log.FromContext(ctx)
+
+	nodeList := &corev1.NodeList{}
+	if err := r.List(ctx, nodeList); err != nil {
+		log.Error(err, "unable to list Nodes")
+		return err
+	}
+
+	if err := r.reconcileStatus(ctx, koorCluster, nodeList); err != nil {
+		return err
+	}
+
+	if err := r.reconcileHelm(ctx, koorCluster, helmClient); err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, nodeList *corev1.NodeList) error {
 	log := log.FromContext(ctx)
 	resources := &koorCluster.Status.TotalResources
@@ -205,19 +224,8 @@ func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster
 	return nil
 }
 
-func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
 	log := log.FromContext(ctx)
-
-	nodeList := &corev1.NodeList{}
-	if err := r.List(ctx, nodeList); err != nil {
-		log.Error(err, "unable to list Nodes")
-		return err
-	}
-
-	if err := r.reconcileStatus(ctx, koorCluster, nodeList); err != nil {
-		return err
-	}
-
 	// Add koor-release repo
 	// helm repo add koor-release https://charts.koor.tech/release
 	chartRepo := repo.Entry{
