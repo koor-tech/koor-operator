@@ -54,6 +54,17 @@ type KoorClusterStatus struct {
 	TotalResources Resources `json:"totalResources"`
 	// Does the cluster meet the minimum recommended resources
 	MeetsMinimumResources bool `json:"meetsMinimumResources"`
+	// The current versions of rook and ceph
+	CurrentVersions Versions `json:"currentVersions,omitempty"`
+	// The latest versions of rook and ceph
+	LatestVersions Versions `json:"latestVersions,omitempty"`
+}
+
+type Versions struct {
+	// The version of Ceph
+	Ceph string `json:"ceph,omitempty"`
+	// The version of Rook
+	Rook string `json:"rook,omitempty"`
 }
 
 type Resources struct {

@@ -75,6 +75,26 @@ spec:
           status:
             description: KoorClusterStatus defines the observed state of KoorCluster
             properties:
+              currentVersions:
+                description: The current versions of rook and ceph
+                properties:
+                  ceph:
+                    description: The version of Ceph
+                    type: string
+                  rook:
+                    description: The version of Rook
+                    type: string
+                type: object
+              latestVersions:
+                description: The latest versions of rook and ceph
+                properties:
+                  ceph:
+                    description: The version of Ceph
+                    type: string
+                  rook:
+                    description: The version of Rook
+                    type: string
+                type: object
               meetsMinimumResources:
                 description: Does the cluster meet the minimum recommended resources
                 type: boolean
