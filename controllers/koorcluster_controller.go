@@ -180,15 +180,7 @@ func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Re
 }
 
 func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
-	log := log.FromContext(ctx)
-
-	nodeList := &corev1.NodeList{}
-	if err := r.List(ctx, nodeList); err != nil {
-		log.Error(err, "unable to list Nodes")
-		return err
-	}
-
-	if err := r.reconcileStatus(ctx, koorCluster, nodeList); err != nil {
+	if err := r.reconcileResources(ctx, koorCluster); err != nil {
 		return err
 	}
 
@@ -203,8 +195,15 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	return nil
 }
 
-func (r *KoorClusterReconciler) reconcileStatus(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, nodeList *corev1.NodeList) error {
+func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster) error {
 	log := log.FromContext(ctx)
+
+	nodeList := &corev1.NodeList{}
+	if err := r.List(ctx, nodeList); err != nil {
+		log.Error(err, "unable to list Nodes")
+		return err
+	}
+
 	resources := &koorCluster.Status.TotalResources
 	resources.Nodes = resource.NewQuantity(int64(len(nodeList.Items)), resource.DecimalSI)
 	resources.Storage = &resource.Quantity{}
