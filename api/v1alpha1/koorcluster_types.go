@@ -40,31 +40,12 @@ type KoorClusterSpec struct {
 	NotificationOptions NotificationOptions `json:"notificationOptions,omitempty"`
 }
 
-const (
-	DefaultCephImageRepository = "quay.io/ceph/ceph"
-	DefaultSchedule            = "0 0 * * *"
-)
-
 type NotificationOptions struct {
 	Enabled bool `json:"enabled,omitempty"`
 	// The repository where the ceph image is pulled. Defaults to quai.io
 	CephImageRepository string `json:"cephImageRepository,omitempty"`
 	// The schedule to check for new versions. Uses CRON format. Defaults to everyday at midnight
 	Schedule string `json:"schedule,omitempty"`
-}
-
-func (no NotificationOptions) GetCephImageRepository() string {
-	if no.CephImageRepository != "" {
-		return no.CephImageRepository
-	}
-	return DefaultCephImageRepository
-}
-
-func (no NotificationOptions) GetSchedule() string {
-	if no.Schedule != "" {
-		return no.Schedule
-	}
-	return DefaultSchedule
 }
 
 // KoorClusterStatus defines the observed state of KoorCluster

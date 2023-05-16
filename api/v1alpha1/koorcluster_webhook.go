@@ -17,7 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -37,6 +39,11 @@ func (r *KoorCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 var _ webhook.Defaulter = &KoorCluster{}
 
+const (
+	DefaultCephImageRepository = "quay.io/ceph/ceph"
+	DefaultSchedule            = "0 0 * * *"
+)
+
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
@@ -53,6 +60,14 @@ func (r *KoorCluster) Default() {
 	if r.Spec.ToolboxEnabled == nil {
 		r.Spec.ToolboxEnabled = pointer.Bool(true)
 	}
+	if r.Spec.NotificationOptions.Enabled {
+		if r.Spec.NotificationOptions.CephImageRepository == "" {
+			r.Spec.NotificationOptions.CephImageRepository = DefaultCephImageRepository
+		}
+		if r.Spec.NotificationOptions.Schedule == "" {
+			r.Spec.NotificationOptions.Schedule = DefaultSchedule
+		}
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -64,16 +79,14 @@ var _ webhook.Validator = &KoorCluster{}
 func (r *KoorCluster) ValidateCreate() error {
 	koorclusterlog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return r.validateNotificationSchedule()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *KoorCluster) ValidateUpdate(old runtime.Object) error {
 	koorclusterlog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	return r.validateNotificationSchedule()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -81,5 +94,17 @@ func (r *KoorCluster) ValidateDelete() error {
 	koorclusterlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
+	return nil
+}
+
+func (r *KoorCluster) validateNotificationSchedule() *field.Error {
+	if !r.Spec.NotificationOptions.Enabled {
+		return nil
+	}
+
+	schedule := r.Spec.NotificationOptions.Schedule
+	if _, err := cron.ParseStandard(schedule); err != nil {
+		return field.Invalid(field.NewPath("spec").Child("notificationOptions").Child("schedule"), schedule, err.Error())
+	}
 	return nil
 }
