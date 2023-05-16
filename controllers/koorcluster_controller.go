@@ -24,6 +24,7 @@ import (
 	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -339,6 +340,18 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 	}
 
 	err := r.crons.Add(jobName, newSchedule, func() {
+		currentKoorCluster := &storagev1alpha1.KoorCluster{}
+		err := r.Get(context.TODO(), types.NamespacedName{Name: koorCluster.Name, Namespace: koorCluster.Namespace}, currentKoorCluster)
+		if k8serrors.IsNotFound(err) {
+			log.Info("KoorCluster not found, deleting the job")
+			r.crons.Remove(jobName)
+			return
+		}
+		if err != nil {
+			log.Error(err, "unable to fetch KoorCluster inside schedule")
+			return
+		}
+
 		// TODO find and update version
 	})
 
