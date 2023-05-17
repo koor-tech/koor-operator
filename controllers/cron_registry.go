@@ -20,8 +20,15 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
+// This is to make mocking easier
+type CronRunner interface {
+	Start()
+	AddFunc(spec string, cmd func()) (cron.EntryID, error)
+	Remove(id cron.EntryID)
+}
+
 type CronRegistry struct {
-	crons     *cron.Cron
+	crons     CronRunner
 	schedules map[string]CronSchedule
 }
 

@@ -34,6 +34,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	"github.com/koor-tech/koor-operator/mocks"
 )
 
 var _ = Describe("KoorCluster controller", func() {
@@ -49,12 +50,16 @@ var _ = Describe("KoorCluster controller", func() {
 
 		rookCurrentVersion = "v1.11.0"
 		cephCurrentVersion = "v17.2.5"
+		rookLatestVersion  = "v1.11.1"
+		cephLatestVersion  = "v17.2.6"
 	)
 
 	var (
-		mockCtrl       *gomock.Controller
-		mockHelmClient *hcmock.MockClient
-		reconciler     *KoorClusterReconciler
+		mockCtrl        *gomock.Controller
+		mockHelmClient  *hcmock.MockClient
+		reconciler      *KoorClusterReconciler
+		mockVS          *mocks.MockVersionService
+		mockCronsRunner *mocks.MockCronRunner
 	)
 
 	rookRelease := &release.Release{
@@ -82,10 +87,16 @@ var _ = Describe("KoorCluster controller", func() {
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockHelmClient = hcmock.NewMockClient(mockCtrl)
+		mockVS = mocks.NewMockVersionService(mockCtrl)
+		mockCronsRunner = mocks.NewMockCronRunner(mockCtrl)
 		reconciler = &KoorClusterReconciler{
 			Client: k8sClient,
 			Scheme: k8sClient.Scheme(),
-			crons:  NewCronRegistry(), // TODO mock this
+			crons: CronRegistry{
+				crons:     mockCronsRunner,
+				schedules: make(map[string]CronSchedule),
+			},
+			vs: mockVS,
 		}
 	})
 
@@ -105,6 +116,18 @@ var _ = Describe("KoorCluster controller", func() {
 						return clusterRelease, nil
 					}),
 			)
+
+			internalFunc := func() {}
+
+			mockCronsRunner.EXPECT().AddFunc(gomock.Any(), gomock.Any()).
+				DoAndReturn(func(schedule string, cmd func()) (int, error) {
+					Expect(schedule).To(Equal("0 0 * * *"))
+					internalFunc = cmd
+					return 1, nil
+				})
+
+			mockVS.EXPECT().LatestCephVersion(gomock.Any()).Return(cephLatestVersion, nil)
+			mockVS.EXPECT().LatestRookVersion(gomock.Any()).Return(rookLatestVersion, nil)
 
 			ctx := context.Background()
 
@@ -185,6 +208,14 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(createdKoorCluster.Status.CurrentVersions.Ceph).To(Equal(cephCurrentVersion))
 			Expect(reconciler.crons.schedules).To(HaveKey(fmt.Sprintf("notification/%s/%s", KoorClusterNamespace, name)))
 
+			By("Checking status after running internal function")
+			internalFunc()
+			Eventually(func() error {
+				return k8sClient.Get(ctx, key, createdKoorCluster)
+			}).Should(Succeed())
+			Expect(createdKoorCluster.Status.LatestVersions.Rook).To(Equal(rookLatestVersion))
+			Expect(createdKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
+
 			By("Adding a new node")
 			newNode := &core.Node{
 				ObjectMeta: metav1.ObjectMeta{
@@ -215,7 +246,7 @@ var _ = Describe("KoorCluster controller", func() {
 			)
 
 			By("Checking status after update")
-			Expect(reconciler.reconcileNormal(ctx, koorCluster, mockHelmClient)).To(Succeed())
+			Expect(reconciler.reconcileNormal(ctx, createdKoorCluster, mockHelmClient)).To(Succeed())
 			updatedKoorCluster := &storagev1alpha1.KoorCluster{}
 
 			Eventually(func() bool {

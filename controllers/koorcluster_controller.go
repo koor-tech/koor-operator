@@ -56,6 +56,7 @@ type KoorClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
 	crons  CronRegistry
+	vs     VersionService
 }
 
 func NewKoorClusterReconciler(mgr ctrl.Manager) *KoorClusterReconciler {
@@ -63,6 +64,7 @@ func NewKoorClusterReconciler(mgr ctrl.Manager) *KoorClusterReconciler {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		crons:  NewCronRegistry(),
+		vs:     &VersionServiceClient{},
 	}
 }
 
@@ -195,7 +197,7 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 		return err
 	}
 
-	if err := r.reconcileNotification(ctx, koorCluster, &VersionServiceClient{}); err != nil {
+	if err := r.reconcileNotification(ctx, koorCluster); err != nil {
 		return err
 	}
 
@@ -385,7 +387,7 @@ func notificationJobName(koorCluster *storagev1alpha1.KoorCluster) string {
 	return fmt.Sprintf("%s/%s", jobName, nn.String())
 }
 
-func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, vs VersionService) error {
+func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster) error {
 	log := log.FromContext(ctx)
 	jobName := notificationJobName(koorCluster)
 	oldSchedule, ok := r.crons.Get(jobName)
@@ -408,9 +410,11 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 		r.crons.Remove(jobName)
 	}
 
+	nn := types.NamespacedName{Name: koorCluster.Name, Namespace: koorCluster.Namespace}
+
 	err := r.crons.Add(jobName, newSchedule, func() {
 		currentKoorCluster := &storagev1alpha1.KoorCluster{}
-		err := r.Get(context.TODO(), types.NamespacedName{Name: koorCluster.Name, Namespace: koorCluster.Namespace}, currentKoorCluster)
+		err := r.Get(context.TODO(), nn, currentKoorCluster)
 		if k8serrors.IsNotFound(err) {
 			log.Info("KoorCluster not found, deleting the job")
 			r.crons.Remove(jobName)
@@ -422,7 +426,7 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 		}
 
 		isUpdated := false
-		latestCephVersion, err := vs.LatestCephVersion(currentKoorCluster.Spec.NotificationOptions.CephEndpoint)
+		latestCephVersion, err := r.vs.LatestCephVersion(currentKoorCluster.Spec.NotificationOptions.CephEndpoint)
 		if err != nil {
 			log.Error(err, "unable to find latest ceph version")
 		} else {
@@ -430,7 +434,7 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 			isUpdated = true
 		}
 
-		latestRookVersion, err := vs.LatestRookVersion(currentKoorCluster.Spec.NotificationOptions.RookEndpoint)
+		latestRookVersion, err := r.vs.LatestRookVersion(currentKoorCluster.Spec.NotificationOptions.RookEndpoint)
 		if err != nil {
 			log.Error(err, "unable to find latest rook version")
 		} else {
