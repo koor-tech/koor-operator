@@ -115,12 +115,19 @@ var _ = Describe("KoorCluster controller", func() {
 					}),
 			)
 
-			internalFunc := func() {}
+			internalFunc := func() {
+				panic("This should not be called!")
+			}
+			kcname := KoorClusterNamePrefix + "create"
+			jobName := fmt.Sprintf("notification/%s/%s", KoorClusterNamespace, kcname)
 
-			mockCronsRegistry.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any()).
-				DoAndReturn(func(name string, schedule string, cmd func()) error {
-					Expect(name).To(Equal(fmt.Sprintf("notification/%s/%s", KoorClusterNamespace, name)))
-					Expect(schedule).To(Equal(defaultSchedule))
+			gomock.InOrder(
+				mockCronsRegistry.EXPECT().Get(jobName).Return("", false),
+				mockCronsRegistry.EXPECT().Get(jobName).Return(defaultSchedule, true),
+			)
+
+			mockCronsRegistry.EXPECT().Add(jobName, defaultSchedule, gomock.Any()).
+				DoAndReturn(func(_ string, _ string, cmd func()) error {
 					internalFunc = cmd
 					return nil
 				})
@@ -176,14 +183,13 @@ var _ = Describe("KoorCluster controller", func() {
 			}
 
 			By("By creating a new KoorCluster")
-			name := KoorClusterNamePrefix + "create"
 			koorCluster := &storagev1alpha1.KoorCluster{
 				TypeMeta: metav1.TypeMeta{
 					APIVersion: "storage.koor.tech/v1alpha1",
 					Kind:       "KoorCluster",
 				},
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      name,
+					Name:      kcname,
 					Namespace: KoorClusterNamespace,
 				},
 			}
@@ -191,7 +197,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(reconciler.reconcileNormal(ctx, koorCluster, mockHelmClient)).To(Succeed())
 
 			By("Checking status after create")
-			key := types.NamespacedName{Name: name, Namespace: KoorClusterNamespace}
+			key := types.NamespacedName{Name: kcname, Namespace: KoorClusterNamespace}
 			createdKoorCluster := &storagev1alpha1.KoorCluster{}
 
 			Eventually(func() error {
