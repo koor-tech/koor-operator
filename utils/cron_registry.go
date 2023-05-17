@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package controllers
+package utils
 
 import (
 	"github.com/pkg/errors"
@@ -21,14 +21,14 @@ import (
 )
 
 // This is to make mocking easier
-type CronRunner interface {
-	Start()
-	AddFunc(spec string, cmd func()) (cron.EntryID, error)
-	Remove(id cron.EntryID)
+type CronRegistry interface {
+	Get(name string) (string, bool)
+	Add(name string, schedule string, cmd func()) error
+	Remove(name string) error
 }
 
-type CronRegistry struct {
-	crons     CronRunner
+type cronRegistryClient struct {
+	crons     *cron.Cron
 	schedules map[string]CronSchedule
 }
 
@@ -38,7 +38,7 @@ type CronSchedule struct {
 }
 
 func NewCronRegistry() CronRegistry {
-	c := CronRegistry{
+	c := &cronRegistryClient{
 		crons:     cron.New(),
 		schedules: make(map[string]CronSchedule),
 	}
@@ -48,12 +48,12 @@ func NewCronRegistry() CronRegistry {
 	return c
 }
 
-func (r *CronRegistry) Get(name string) (string, bool) {
+func (r *cronRegistryClient) Get(name string) (string, bool) {
 	cs, ok := r.schedules[name]
 	return cs.Schedule, ok
 }
 
-func (r *CronRegistry) Add(name string, schedule string, cmd func()) error {
+func (r *cronRegistryClient) Add(name string, schedule string, cmd func()) error {
 	id, err := r.crons.AddFunc(schedule, cmd)
 	if err != nil {
 		return errors.Wrap(err, "Could not parse schedule")
@@ -67,7 +67,7 @@ func (r *CronRegistry) Add(name string, schedule string, cmd func()) error {
 	return nil
 }
 
-func (r *CronRegistry) Remove(name string) error {
+func (r *cronRegistryClient) Remove(name string) error {
 	cs, ok := r.schedules[name]
 	if !ok {
 		return errors.New("Cron not found")

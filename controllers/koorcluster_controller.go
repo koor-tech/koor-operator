@@ -48,6 +48,7 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
+	"github.com/koor-tech/koor-operator/utils"
 	"github.com/koor-tech/koor-operator/values"
 )
 
@@ -55,16 +56,16 @@ import (
 type KoorClusterReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
-	crons  CronRegistry
-	vs     VersionService
+	crons  utils.CronRegistry
+	vs     utils.VersionService
 }
 
 func NewKoorClusterReconciler(mgr ctrl.Manager) *KoorClusterReconciler {
 	return &KoorClusterReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-		crons:  NewCronRegistry(),
-		vs:     &VersionServiceClient{},
+		crons:  utils.NewCronRegistry(),
+		vs:     &utils.VersionServiceClient{},
 	}
 }
 

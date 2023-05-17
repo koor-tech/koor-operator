@@ -95,8 +95,8 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 
 .PHONY: generate
 generate: mockgen controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
-	$(MOCKGEN) -source=controllers/cron_registry.go -package mocks -destination=./mocks/cron_registry.go -self_package=. CronRunner
-	$(MOCKGEN) -source=controllers/version_service.go -package mocks -destination=./mocks/version_service.go -self_package=. VersionService
+	$(MOCKGEN) -source=utils/cron_registry.go -package mocks -destination=./mocks/cron_registry.go -self_package=. CronRegistry
+	$(MOCKGEN) -source=utils/version_service.go -package mocks -destination=./mocks/version_service.go -self_package=. VersionService
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
