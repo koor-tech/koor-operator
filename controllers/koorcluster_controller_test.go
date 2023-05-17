@@ -17,8 +17,11 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/release"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,6 +46,9 @@ var _ = Describe("KoorCluster controller", func() {
 		timeout  = time.Second * 10
 		duration = time.Second * 10
 		interval = time.Millisecond * 250
+
+		rookCurrentVersion = "v1.11.0"
+		cephCurrentVersion = "v17.2.5"
 	)
 
 	var (
@@ -51,12 +57,35 @@ var _ = Describe("KoorCluster controller", func() {
 		reconciler     *KoorClusterReconciler
 	)
 
+	rookRelease := &release.Release{
+		Chart: &chart.Chart{
+			Values: map[string]any{
+				"image": map[string]any{
+					"tag": rookCurrentVersion,
+				},
+			},
+		},
+	}
+
+	clusterRelease := &release.Release{
+		Chart: &chart.Chart{
+			Values: map[string]any{
+				"cephClusterSpec": map[string]any{
+					"cephVersion": map[string]any{
+						"image": "quai.io/ceph/ceph:" + cephCurrentVersion,
+					},
+				},
+			},
+		},
+	}
+
 	BeforeEach(func() {
 		mockCtrl = gomock.NewController(GinkgoT())
 		mockHelmClient = hcmock.NewMockClient(mockCtrl)
 		reconciler = &KoorClusterReconciler{
 			Client: k8sClient,
 			Scheme: k8sClient.Scheme(),
+			crons:  NewCronRegistry(), // TODO mock this
 		}
 	})
 
@@ -68,12 +97,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
-						return nil, nil
+						return rookRelease, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
-						return nil, nil
+						return clusterRelease, nil
 					}),
 			)
 
@@ -152,6 +181,9 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(createdKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("60G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("600G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.MeetsMinimumResources).To(BeFalse())
+			Expect(createdKoorCluster.Status.CurrentVersions.Rook).To(Equal(rookCurrentVersion))
+			Expect(createdKoorCluster.Status.CurrentVersions.Ceph).To(Equal(cephCurrentVersion))
+			Expect(reconciler.crons.schedules).To(HaveKey(fmt.Sprintf("notification/%s/%s", KoorClusterNamespace, name)))
 
 			By("Adding a new node")
 			newNode := &core.Node{
@@ -173,12 +205,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
-						return nil, nil
+						return rookRelease, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
-						return nil, nil
+						return clusterRelease, nil
 					}),
 			)
 
