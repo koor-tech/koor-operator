@@ -53,6 +53,7 @@ var _ = Describe("KoorCluster controller", func() {
 		rookLatestVersion  = "v1.11.1"
 		cephLatestVersion  = "v17.2.6"
 		defaultSchedule    = "0 0 * * *"
+		newSchedule        = "1 0 * * *"
 	)
 
 	var (
@@ -101,14 +102,14 @@ var _ = Describe("KoorCluster controller", func() {
 	Context("When creating a KoorCluster", func() {
 		It("Should update status and install the operator and the cluster helm charts", func() {
 			gomock.InOrder(
-				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil).Times(1),
-				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
-				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil),
+				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
 						return rookRelease, nil
 					}),
-				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
 						return clusterRelease, nil
@@ -123,6 +124,7 @@ var _ = Describe("KoorCluster controller", func() {
 
 			gomock.InOrder(
 				mockCronsRegistry.EXPECT().Get(jobName).Return("", false),
+				mockCronsRegistry.EXPECT().Get(jobName).Return(defaultSchedule, true),
 				mockCronsRegistry.EXPECT().Get(jobName).Return(defaultSchedule, true),
 			)
 
@@ -235,43 +237,93 @@ var _ = Describe("KoorCluster controller", func() {
 			}
 			Expect(k8sClient.Create(ctx, newNode)).To(Succeed())
 			gomock.InOrder(
-				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil).Times(1),
-				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil).Times(1),
-				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil),
+				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
 						return rookRelease, nil
 					}),
-				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).Times(1).
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
 						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
 						return clusterRelease, nil
 					}),
 			)
 
-			By("Checking status after update")
+			By("Checking status after adding nodes")
 			Expect(reconciler.reconcileNormal(ctx, createdKoorCluster, mockHelmClient)).To(Succeed())
-			updatedKoorCluster := &storagev1alpha1.KoorCluster{}
+			afterNodeKoorCluster := &storagev1alpha1.KoorCluster{}
 
+			Eventually(func() bool {
+				err := k8sClient.Get(ctx, key, afterNodeKoorCluster)
+				if err != nil {
+					return false
+				}
+				return afterNodeKoorCluster.Status.TotalResources.Nodes.Equal(resource.MustParse("4"))
+			}, "5s").Should(BeTrue())
+			Expect(afterNodeKoorCluster.Status.TotalResources.Cpu.Equal(resource.MustParse("20"))).To(BeTrue())
+			Expect(afterNodeKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("100G"))).To(BeTrue())
+			Expect(afterNodeKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("1000G"))).To(BeTrue())
+			Expect(afterNodeKoorCluster.Status.MeetsMinimumResources).To(BeTrue())
+
+			By("Updating the notification schedule")
+			afterNodeKoorCluster.Spec.NotificationOptions.Schedule = newSchedule
+			Expect(k8sClient.Update(ctx, afterNodeKoorCluster)).To(Succeed())
+
+			gomock.InOrder(
+				mockHelmClient.EXPECT().AddOrUpdateChartRepo(gomock.Any()).Return(nil),
+				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
+						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
+						return rookRelease, nil
+					}),
+				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
+						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
+						return clusterRelease, nil
+					}),
+			)
+
+			gomock.InOrder(
+				mockCronsRegistry.EXPECT().Remove(jobName).Return(nil),
+				mockCronsRegistry.EXPECT().Add(jobName, newSchedule, gomock.Any()).
+					DoAndReturn(func(_ string, _ string, cmd func()) error {
+						internalFunc = cmd
+						return nil
+					}),
+			)
+
+			mockVS.EXPECT().LatestCephVersion(gomock.Any()).Return("", fmt.Errorf("failed"))
+			mockVS.EXPECT().LatestRookVersion(gomock.Any()).Return("", fmt.Errorf("failed"))
+
+			By("Checking status after updating notification schedule")
+			Expect(reconciler.reconcileNormal(ctx, afterNodeKoorCluster, mockHelmClient)).To(Succeed())
+			updatedKoorCluster := &storagev1alpha1.KoorCluster{}
 			Eventually(func() bool {
 				err := k8sClient.Get(ctx, key, updatedKoorCluster)
 				if err != nil {
 					return false
 				}
-				return updatedKoorCluster.Status.TotalResources.Nodes.Equal(resource.MustParse("4"))
+				return updatedKoorCluster.Spec.NotificationOptions.Schedule == newSchedule
 			}, "5s").Should(BeTrue())
-			Expect(updatedKoorCluster.Status.TotalResources.Cpu.Equal(resource.MustParse("20"))).To(BeTrue())
-			Expect(updatedKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("100G"))).To(BeTrue())
-			Expect(updatedKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("1000G"))).To(BeTrue())
-			Expect(updatedKoorCluster.Status.MeetsMinimumResources).To(BeTrue())
+
+			By("Checking status after running internal function")
+			internalFunc()
+			Eventually(func() error {
+				return k8sClient.Get(ctx, key, updatedKoorCluster)
+			}).Should(Succeed())
+			Expect(updatedKoorCluster.Status.LatestVersions.Rook).To(Equal(rookLatestVersion))
+			Expect(updatedKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
 		})
 	})
 
 	Context("When finalizing a KoorCluster", func() {
 		It("Should uninstall the operator and the cluster helm charts", func() {
 			gomock.InOrder(
-				mockHelmClient.EXPECT().UninstallReleaseByName(ClusterReleaseName).Return(nil).Times(1),
-				mockHelmClient.EXPECT().UninstallReleaseByName(RookReleaseName).Return(nil).Times(1),
+				mockHelmClient.EXPECT().UninstallReleaseByName(ClusterReleaseName).Return(nil),
+				mockHelmClient.EXPECT().UninstallReleaseByName(RookReleaseName).Return(nil),
 			)
 
 			By("By creating a KoorCluster with Finalizer")
