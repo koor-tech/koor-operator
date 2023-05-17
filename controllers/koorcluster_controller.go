@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"text/template"
 
 	corev1 "k8s.io/api/core/v1"
@@ -40,10 +41,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/itchyny/gojq"
+	hc "github.com/mittwald/go-helm-client"
+	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/repo"
+
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/utils"
-	hc "github.com/mittwald/go-helm-client"
-	"helm.sh/helm/v3/pkg/repo"
 )
 
 // KoorClusterReconciler reconciles a KoorCluster object
@@ -181,6 +186,7 @@ func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Re
 }
 
 func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+	log := log.FromContext(ctx)
 	if err := r.reconcileResources(ctx, koorCluster); err != nil {
 		return err
 	}
@@ -190,6 +196,11 @@ func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster
 	}
 
 	if err := r.reconcileNotification(ctx, koorCluster, &VersionServiceClient{}); err != nil {
+		return err
+	}
+
+	if err := r.Status().Update(ctx, koorCluster); err != nil {
+		log.Error(err, "Unable to update KoorCluster status")
 		return err
 	}
 
@@ -221,12 +232,9 @@ func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorClus
 	koorCluster.Status.MeetsMinimumResources = resources.MeetsMinimum()
 	if !koorCluster.Status.MeetsMinimumResources {
 		log.Info("The cluster does not meet the minimum resource requirements")
+		// TODO add event for minimum resources
 	}
 
-	if err := r.Status().Update(ctx, koorCluster); err != nil {
-		log.Error(err, "Unable to update KoorCluster status")
-		return err
-	}
 	return nil
 }
 
@@ -273,10 +281,18 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 		ValuesYaml:      operatorBuffer.String(),
 	}
 
-	_, err = helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
+	operatorRelease, err := helmClient.InstallOrUpgradeChart(ctx, &operatorChartSpec, nil)
 	if err != nil {
 		log.Error(err, "Cannot install or upgrade operator chart")
 		return err
+	}
+
+	rookVersion, err := getRookVersion(operatorRelease)
+	if err != nil {
+		log.Error(err, "Could not find rook version")
+	} else {
+		log.Info("Found rook version", "rookVersion", rookVersion)
+		koorCluster.Status.CurrentVersions.Rook = rookVersion
 	}
 
 	// Install rook cluster
@@ -298,13 +314,66 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 		ValuesYaml:      clusterBuffer.String(),
 	}
 
-	_, err = helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
+	clusterRelease, err := helmClient.InstallOrUpgradeChart(ctx, &clusterChartSpec, nil)
 	if err != nil {
 		log.Error(err, "Cannot install or upgrade cluster chart")
 		return err
 	}
+	cephVersion, err := getCephVersion(clusterRelease)
+	if err != nil {
+		log.Error(err, "Could not find ceph version")
+	} else {
+		log.Info("Found ceph version", "cephVersion", cephVersion)
+		koorCluster.Status.CurrentVersions.Ceph = cephVersion
+	}
 
 	return nil
+}
+
+func getRookVersion(rel *release.Release) (string, error) {
+	result := ""
+	query, err := gojq.Parse(".image.tag")
+	if err != nil {
+		// This should not happen
+		return result, errors.Wrap(err, "Failed to compile rook query")
+	}
+	iter := query.Run(rel.Chart.Values)
+	rookVersion, ok := iter.Next()
+	if !ok {
+		return result, fmt.Errorf("Could not find rook version via query")
+	}
+
+	result, ok = rookVersion.(string)
+	if !ok {
+		return result, fmt.Errorf("Found field is not a string")
+	}
+	return result, nil
+}
+
+func getCephVersion(rel *release.Release) (string, error) {
+	result := ""
+	query, err := gojq.Parse(".cephClusterSpec.cephVersion.image")
+	if err != nil {
+		// This should not happen
+		return result, errors.Wrap(err, "Failed to compile ceph query")
+	}
+
+	iter := query.Run(rel.Chart.Values)
+	cephImage, ok := iter.Next()
+	if !ok {
+		return result, fmt.Errorf("Could not find ceph image via query")
+	}
+
+	cephImageStr, ok := cephImage.(string)
+	if !ok {
+		return result, fmt.Errorf("Ceph image is not a string")
+	}
+
+	cephImageParts := strings.Split(cephImageStr, ":")
+	if len(cephImageParts) != 2 {
+		return result, fmt.Errorf("Ceph image is malformatted")
+	}
+	return cephImageParts[1], nil
 }
 
 func notificationJobName(koorCluster *storagev1alpha1.KoorCluster) string {
@@ -368,6 +437,8 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 			currentKoorCluster.Status.LatestVersions.Rook = latestRookVersion
 			isUpdated = true
 		}
+
+		// TODO add event if current version is not latest
 
 		if isUpdated {
 			if err := r.Status().Update(ctx, currentKoorCluster); err != nil {
