@@ -20,7 +20,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/validation/field"
-	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -39,39 +38,9 @@ func (r *KoorCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 
 var _ webhook.Defaulter = &KoorCluster{}
 
-const (
-	DefaultCephEndpoint = "quay.io/ceph/ceph"
-	DefaultRookEndpoint = "api.github.com/repos/rook/rook/releases"
-	DefaultSchedule     = "0 0 * * *"
-)
-
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
-
-	if r.Spec.UseAllDevices == nil {
-		r.Spec.UseAllDevices = pointer.Bool(true)
-	}
-	if r.Spec.MonitoringEnabled == nil {
-		r.Spec.MonitoringEnabled = pointer.Bool(true)
-	}
-	if r.Spec.DashboardEnabled == nil {
-		r.Spec.DashboardEnabled = pointer.Bool(true)
-	}
-	if r.Spec.ToolboxEnabled == nil {
-		r.Spec.ToolboxEnabled = pointer.Bool(true)
-	}
-	if r.Spec.NotificationOptions.Enabled {
-		if r.Spec.NotificationOptions.CephEndpoint == "" {
-			r.Spec.NotificationOptions.CephEndpoint = DefaultCephEndpoint
-		}
-		if r.Spec.NotificationOptions.RookEndpoint == "" {
-			r.Spec.NotificationOptions.RookEndpoint = DefaultRookEndpoint
-		}
-		if r.Spec.NotificationOptions.Schedule == "" {
-			r.Spec.NotificationOptions.Schedule = DefaultSchedule
-		}
-	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

@@ -29,24 +29,32 @@ type KoorClusterSpec struct {
 	// Important: Run "make" to regenerate code after modifying this file
 
 	// Use all devices on nodes
+	//+kubebuilder:default:=true
 	UseAllDevices *bool `json:"useAllDevices,omitempty"`
 	// Enable monitoring. Requires Prometheus to be pre-installed.
+	//+kubebuilder:default:=true
 	MonitoringEnabled *bool `json:"monitoringEnabled,omitempty"`
 	// Enable the ceph dashboard for viewing cluster status
+	//+kubebuilder:default:=true
 	DashboardEnabled *bool `json:"dashboardEnabled,omitempty"`
 	// Installs a debugging toolbox deployment
+	//+kubebuilder:default:=true
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 	// Specifies the notification options for new ceph versions
 	NotificationOptions NotificationOptions `json:"notificationOptions,omitempty"`
 }
 
 type NotificationOptions struct {
+	//+kubebuilder:default:=true
 	Enabled bool `json:"enabled,omitempty"`
-	// The api endpoint used to find the ceph latest version. Defaults to quai.io/ceph/ceph
+	// The api endpoint used to find the ceph latest version
+	//+kubebuilder:default:="quai.io/ceph/ceph"
 	CephEndpoint string `json:"cephEndpoint,omitempty"`
-	// The api endpoint used to find the rook latest version. Defaults to https://api.github.com/repos/rook/rook/releases
+	// The api endpoint used to find the rook latest version
+	//+kubebuilder:default:="api.github.com/repos/rook/rook/releases"
 	RookEndpoint string `json:"rookEndpoint,omitempty"`
 	// The schedule to check for new versions. Uses CRON format. Defaults to everyday at midnight
+	//+kubebuilder:default:="0 0 * * *"
 	Schedule string `json:"schedule,omitempty"`
 }
 
