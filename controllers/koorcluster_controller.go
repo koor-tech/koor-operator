@@ -48,7 +48,7 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
-	"github.com/koor-tech/koor-operator/utils"
+	"github.com/koor-tech/koor-operator/values"
 )
 
 // KoorClusterReconciler reconciles a KoorCluster object
@@ -259,7 +259,7 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 		return err
 	}
 
-	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(&utils.Templates, "*")
+	templates, err := template.New("").Funcs(sprig.TxtFuncMap()).ParseFS(&values.Templates, "*")
 	if err != nil {
 		log.Error(err, "Cannot parse templates")
 		return err
