@@ -27,8 +27,8 @@ The Ceph Operator helm chart will install the basic components necessary to crea
 The `helm install` command deploys the Koor Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation. It is recommended that the Koor Operator be installed into the `koor-operator` namespace (you will install your clusters into separate namespaces).
 
 ```console
-helm repo add koor-release https://charts.koor.tech/release
-helm install --create-namespace --namespace koor-operator koor-operator koor-release/koor-operator -f values.yaml
+helm repo add koor-operator https://koor-tech.github.io/koor-operator
+helm install --create-namespace --namespace koor-operator koor-operator koor-operator/koor-operator -f values.yaml
 ```
 
 For example settings, see the next section or [values.yaml](/charts/koor-operator/values.yaml).
