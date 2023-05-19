@@ -3,21 +3,20 @@ certmanager:
   enabled: true
   # -- If cert-manager's CRDs should be installed through Helm.
   installCRDs: true
-
 controllerManager:
   # -- RBAC proxy configuration
   kubeRbacProxy:
     args:
-      - --secure-listen-address=0.0.0.0:8443
-      - --upstream=http://127.0.0.1:8080/
-      - --logtostderr=true
-      - --v=0
+    - --secure-listen-address=0.0.0.0:8443
+    - --upstream=http://127.0.0.1:8080/
+    - --logtostderr=true
+    - --v=0
     # -- RBAC proxy container security context
     containerSecurityContext:
       allowPrivilegeEscalation: false
       capabilities:
         drop:
-          - ALL
+        - ALL
     image:
       # -- Operator image repository
       repository: gcr.io/kubebuilder/kube-rbac-proxy
@@ -34,15 +33,15 @@ controllerManager:
   # -- Operator configuration
   manager:
     args:
-      - --health-probe-bind-address=:8081
-      - --metrics-bind-address=127.0.0.1:8080
-      - --leader-elect
+    - --health-probe-bind-address=:8081
+    - --metrics-bind-address=127.0.0.1:8080
+    - --leader-elect
     # -- Operator container security context
     containerSecurityContext:
       allowPrivilegeEscalation: false
       capabilities:
         drop:
-          - ALL
+        - ALL
     image:
       # -- Operator image repository
       repository: docker.io/koorinc/koor-operator
@@ -61,19 +60,18 @@ kubernetesClusterDomain: cluster.local
 # -- Metrics Service
 metricsService:
   ports:
-    - name: https
-      port: 8443
-      protocol: TCP
-      targetPort: https
+  - name: https
+    port: 8443
+    protocol: TCP
+    targetPort: https
   type: ClusterIP
 # -- Webhook service
 webhookService:
   ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 9443
+  - port: 443
+    protocol: TCP
+    targetPort: 9443
   type: ClusterIP
-
 # This is appeneded to values.yaml from additional-values.yaml. This is a hack to avoid getting these values overwritten by helmify
 
 # -- Koor Cluster specification
@@ -82,7 +80,7 @@ koorCluster:
     # -- If all empty + unused devices of the cluster should be used.
     useAllDevices: true
     # -- If monitoring should be enabled, requires the prometheus-operator to be pre-installed.
-    monitoringEnabled: false
+    monitoringEnabled: true
     # -- Enable the Ceph MGR dashboard.
     dashboardEnabled: true
     # -- If the Ceph toolbox, should be deployed as well.
