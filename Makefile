@@ -126,6 +126,7 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	$(KUSTOMIZE) build config/default | \
 		$(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
+	./scripts/ignore_values_comments.sh
 	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
 	sed -i 's/^\certManager:/certmanager:/' charts/koor-operator/values.yaml
 
