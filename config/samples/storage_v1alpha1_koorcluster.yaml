@@ -15,4 +15,4 @@ spec:
   dashboardEnabled: true
   toolboxEnabled: true
   notificationOptions:
-    enabled: true
+    mode: notify

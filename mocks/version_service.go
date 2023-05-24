@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	utils "github.com/koor-tech/koor-operator/utils"
 )
 
 // MockVersionService is a mock of VersionService interface.
@@ -33,32 +34,17 @@ func (m *MockVersionService) EXPECT() *MockVersionServiceMockRecorder {
 	return m.recorder
 }
 
-// LatestCephVersion mocks base method.
-func (m *MockVersionService) LatestCephVersion(endpoint string) (string, error) {
+// LatestVersions mocks base method.
+func (m *MockVersionService) LatestVersions(endpoint string, currentVersions utils.Versions) (utils.Versions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LatestCephVersion", endpoint)
-	ret0, _ := ret[0].(string)
+	ret := m.ctrl.Call(m, "LatestVersions", endpoint, currentVersions)
+	ret0, _ := ret[0].(utils.Versions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// LatestCephVersion indicates an expected call of LatestCephVersion.
-func (mr *MockVersionServiceMockRecorder) LatestCephVersion(endpoint interface{}) *gomock.Call {
+// LatestVersions indicates an expected call of LatestVersions.
+func (mr *MockVersionServiceMockRecorder) LatestVersions(endpoint, currentVersions interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestCephVersion", reflect.TypeOf((*MockVersionService)(nil).LatestCephVersion), endpoint)
-}
-
-// LatestRookVersion mocks base method.
-func (m *MockVersionService) LatestRookVersion(endpoint string) (string, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LatestRookVersion", endpoint)
-	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// LatestRookVersion indicates an expected call of LatestRookVersion.
-func (mr *MockVersionServiceMockRecorder) LatestRookVersion(endpoint interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestRookVersion", reflect.TypeOf((*MockVersionService)(nil).LatestRookVersion), endpoint)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestVersions", reflect.TypeOf((*MockVersionService)(nil).LatestVersions), endpoint, currentVersions)
 }

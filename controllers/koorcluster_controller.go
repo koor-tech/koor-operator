@@ -290,12 +290,12 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 		return err
 	}
 
-	rookVersion, err := getRookVersion(operatorRelease)
+	ksdVersion, err := getKSDVersion(operatorRelease)
 	if err != nil {
-		log.Error(err, "Could not find rook version")
+		log.Error(err, "Could not find KSD version")
 	} else {
-		log.Info("Found rook version", "rookVersion", rookVersion)
-		koorCluster.Status.CurrentVersions.Rook = rookVersion
+		log.Info("Found KSD version", "ksdVersion", ksdVersion)
+		koorCluster.Status.CurrentVersions.KSD = ksdVersion
 	}
 
 	// Install rook cluster
@@ -333,7 +333,7 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 	return nil
 }
 
-func getRookVersion(rel *release.Release) (string, error) {
+func getKSDVersion(rel *release.Release) (string, error) {
 	result := ""
 	query, err := gojq.Parse(".image.tag")
 	if err != nil {
@@ -341,12 +341,12 @@ func getRookVersion(rel *release.Release) (string, error) {
 		return result, errors.Wrap(err, "Failed to compile rook query")
 	}
 	iter := query.Run(rel.Chart.Values)
-	rookVersion, ok := iter.Next()
+	ksdVersion, ok := iter.Next()
 	if !ok {
 		return result, fmt.Errorf("Could not find rook version via query")
 	}
 
-	result, ok = rookVersion.(string)
+	result, ok = ksdVersion.(string)
 	if !ok {
 		return result, fmt.Errorf("Found field is not a string")
 	}
@@ -392,7 +392,7 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 	log := log.FromContext(ctx)
 	jobName := notificationJobName(koorCluster)
 	oldSchedule, ok := r.crons.Get(jobName)
-	if !koorCluster.Spec.NotificationOptions.Enabled {
+	if !koorCluster.Spec.UpgradeOptions.IsEnabled() {
 		if ok {
 			// Notifications should be disabled
 			r.crons.Remove(jobName)
@@ -400,7 +400,7 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 		return nil
 	}
 
-	newSchedule := koorCluster.Spec.NotificationOptions.Schedule
+	newSchedule := koorCluster.Spec.UpgradeOptions.Schedule
 	if ok && newSchedule == oldSchedule {
 		// Nothing changed
 		return nil
@@ -426,29 +426,26 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 			return
 		}
 
-		isUpdated := false
-		latestCephVersion, err := r.vs.LatestCephVersion(currentKoorCluster.Spec.NotificationOptions.CephEndpoint)
-		if err != nil {
-			log.Error(err, "unable to find latest ceph version")
-		} else {
-			currentKoorCluster.Status.LatestVersions.Ceph = latestCephVersion
-			isUpdated = true
+		currentVersions := utils.Versions{
+			Ceph:         currentKoorCluster.Status.CurrentVersions.Ceph,
+			KSD:          currentKoorCluster.Status.CurrentVersions.KSD,
+			KoorOperator: currentKoorCluster.Status.CurrentVersions.KoorOperator,
 		}
-
-		latestRookVersion, err := r.vs.LatestRookVersion(currentKoorCluster.Spec.NotificationOptions.RookEndpoint)
+		latestVersions, err := r.vs.LatestVersions(currentKoorCluster.Spec.UpgradeOptions.Endpoint, currentVersions)
 		if err != nil {
-			log.Error(err, "unable to find latest rook version")
+			log.Error(err, "unable to find latest versions")
 		} else {
-			currentKoorCluster.Status.LatestVersions.Rook = latestRookVersion
-			isUpdated = true
-		}
-
-		// TODO add event if current version is not latest
-
-		if isUpdated {
-			if err := r.Status().Update(ctx, currentKoorCluster); err != nil {
-				log.Error(err, "Unable to update KoorCluster status")
+			currentKoorCluster.Status.LatestVersions = storagev1alpha1.Versions{
+				Ceph:         latestVersions.Ceph,
+				KSD:          latestVersions.KSD,
+				KoorOperator: latestVersions.KoorOperator,
 			}
+		}
+
+		// TODO add event if current versions are not latest
+
+		if err := r.Status().Update(ctx, currentKoorCluster); err != nil {
+			log.Error(err, "Unable to update KoorCluster status in cronjob")
 		}
 	})
 

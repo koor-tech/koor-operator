@@ -35,6 +35,7 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/mocks"
+	"github.com/koor-tech/koor-operator/utils"
 )
 
 var _ = Describe("KoorCluster controller", func() {
@@ -48,9 +49,9 @@ var _ = Describe("KoorCluster controller", func() {
 		duration = time.Second * 10
 		interval = time.Millisecond * 250
 
-		rookCurrentVersion = "v1.11.0"
+		ksdCurrentVersion  = "v1.11.0"
 		cephCurrentVersion = "v17.2.5"
-		rookLatestVersion  = "v1.11.1"
+		ksdLatestVersion   = "v1.11.1"
 		cephLatestVersion  = "v17.2.6"
 		defaultSchedule    = "0 0 * * *"
 		newSchedule        = "1 0 * * *"
@@ -68,7 +69,7 @@ var _ = Describe("KoorCluster controller", func() {
 		Chart: &chart.Chart{
 			Values: map[string]any{
 				"image": map[string]any{
-					"tag": rookCurrentVersion,
+					"tag": ksdCurrentVersion,
 				},
 			},
 		},
@@ -134,8 +135,10 @@ var _ = Describe("KoorCluster controller", func() {
 					return nil
 				})
 
-			mockVS.EXPECT().LatestCephVersion(gomock.Any()).Return(cephLatestVersion, nil)
-			mockVS.EXPECT().LatestRookVersion(gomock.Any()).Return(rookLatestVersion, nil)
+			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any()).Return(utils.Versions{
+				Ceph: cephLatestVersion,
+				KSD:  ksdLatestVersion,
+			}, nil)
 
 			ctx := context.Background()
 
@@ -211,7 +214,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(createdKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("60G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("600G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.MeetsMinimumResources).To(BeFalse())
-			Expect(createdKoorCluster.Status.CurrentVersions.Rook).To(Equal(rookCurrentVersion))
+			Expect(createdKoorCluster.Status.CurrentVersions.KSD).To(Equal(ksdCurrentVersion))
 			Expect(createdKoorCluster.Status.CurrentVersions.Ceph).To(Equal(cephCurrentVersion))
 
 			By("Checking status after running internal function")
@@ -219,7 +222,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, key, createdKoorCluster)
 			}).Should(Succeed())
-			Expect(createdKoorCluster.Status.LatestVersions.Rook).To(Equal(rookLatestVersion))
+			Expect(createdKoorCluster.Status.LatestVersions.KSD).To(Equal(ksdLatestVersion))
 			Expect(createdKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
 
 			By("Adding a new node")
@@ -268,7 +271,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(afterNodeKoorCluster.Status.MeetsMinimumResources).To(BeTrue())
 
 			By("Updating the notification schedule")
-			afterNodeKoorCluster.Spec.NotificationOptions.Schedule = newSchedule
+			afterNodeKoorCluster.Spec.UpgradeOptions.Schedule = newSchedule
 			Expect(k8sClient.Update(ctx, afterNodeKoorCluster)).To(Succeed())
 
 			gomock.InOrder(
@@ -295,8 +298,7 @@ var _ = Describe("KoorCluster controller", func() {
 					}),
 			)
 
-			mockVS.EXPECT().LatestCephVersion(gomock.Any()).Return("", fmt.Errorf("failed"))
-			mockVS.EXPECT().LatestRookVersion(gomock.Any()).Return("", fmt.Errorf("failed"))
+			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any()).Return(utils.Versions{}, fmt.Errorf("failed"))
 
 			By("Checking status after updating notification schedule")
 			Expect(reconciler.reconcileNormal(ctx, afterNodeKoorCluster, mockHelmClient)).To(Succeed())
@@ -306,7 +308,7 @@ var _ = Describe("KoorCluster controller", func() {
 				if err != nil {
 					return false
 				}
-				return updatedKoorCluster.Spec.NotificationOptions.Schedule == newSchedule
+				return updatedKoorCluster.Spec.UpgradeOptions.Schedule == newSchedule
 			}, "5s").Should(BeTrue())
 
 			By("Checking status after running internal function")
@@ -314,7 +316,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, key, updatedKoorCluster)
 			}).Should(Succeed())
-			Expect(updatedKoorCluster.Status.LatestVersions.Rook).To(Equal(rookLatestVersion))
+			Expect(updatedKoorCluster.Status.LatestVersions.KSD).To(Equal(ksdLatestVersion))
 			Expect(updatedKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
 		})
 	})

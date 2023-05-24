@@ -19,18 +19,22 @@ import (
 	"fmt"
 )
 
+type Versions struct {
+	// The version of Ceph
+	Ceph string
+	// The version of KSD
+	KSD string
+	// The version of the koor Operator
+	KoorOperator string
+}
+
 type VersionService interface {
-	LatestCephVersion(endpoint string) (string, error)
-	LatestRookVersion(endpoint string) (string, error)
+	LatestVersions(endpoint string, currentVersions Versions) (Versions, error)
 }
 
 type VersionServiceClient struct {
 }
 
-func (vc *VersionServiceClient) LatestCephVersion(_ string) (string, error) {
-	return "", fmt.Errorf("Not implemented")
-}
-
-func (vc *VersionServiceClient) LatestRookVersion(_ string) (string, error) {
-	return "", fmt.Errorf("Not implemented")
+func (vc *VersionServiceClient) LatestVersions(_ string, currentVersions Versions) (Versions, error) {
+	return currentVersions, fmt.Errorf("Not implemented")
 }

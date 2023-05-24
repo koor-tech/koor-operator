@@ -58,16 +58,17 @@ spec:
               notificationOptions:
                 description: Specifies the notification options for new ceph versions
                 properties:
-                  cephEndpoint:
-                    default: quai.io/ceph/ceph
+                  endpoint:
+                    default: versions.koor.tech
                     description: The api endpoint used to find the ceph latest version
                     type: string
-                  enabled:
-                    default: true
-                    type: boolean
-                  rookEndpoint:
-                    default: api.github.com/repos/rook/rook/releases
-                    description: The api endpoint used to find the rook latest version
+                  mode:
+                    default: notify
+                    description: Upgrade mode
+                    enum:
+                    - disabled
+                    - notify
+                    - upgrade
                     type: string
                   schedule:
                     default: 0 0 * * *
@@ -93,8 +94,11 @@ spec:
                   ceph:
                     description: The version of Ceph
                     type: string
-                  rook:
-                    description: The version of Rook
+                  koorOperator:
+                    description: The version of the koor Operator
+                    type: string
+                  ksd:
+                    description: The version of KSD
                     type: string
                 type: object
               latestVersions:
@@ -103,8 +107,11 @@ spec:
                   ceph:
                     description: The version of Ceph
                     type: string
-                  rook:
-                    description: The version of Rook
+                  koorOperator:
+                    description: The version of the koor Operator
+                    type: string
+                  ksd:
+                    description: The version of KSD
                     type: string
                 type: object
               meetsMinimumResources:

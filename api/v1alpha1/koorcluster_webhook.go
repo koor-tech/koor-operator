@@ -71,11 +71,11 @@ func (r *KoorCluster) ValidateDelete() error {
 }
 
 func (r *KoorCluster) validateNotificationSchedule() *field.Error {
-	if !r.Spec.NotificationOptions.Enabled {
+	if !r.Spec.UpgradeOptions.IsEnabled() {
 		return nil
 	}
 
-	schedule := r.Spec.NotificationOptions.Schedule
+	schedule := r.Spec.UpgradeOptions.Schedule
 	if _, err := cron.ParseStandard(schedule); err != nil {
 		return field.Invalid(field.NewPath("spec").Child("notificationOptions").Child("schedule"), schedule, err.Error())
 	}

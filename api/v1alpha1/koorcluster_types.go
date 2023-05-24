@@ -41,21 +41,32 @@ type KoorClusterSpec struct {
 	//+kubebuilder:default:=true
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 	// Specifies the notification options for new ceph versions
-	NotificationOptions NotificationOptions `json:"notificationOptions,omitempty"`
+	UpgradeOptions UpgradeOptions `json:"notificationOptions,omitempty"`
 }
 
-type NotificationOptions struct {
-	//+kubebuilder:default:=true
-	Enabled bool `json:"enabled,omitempty"`
+// +kubebuilder:validation:Enum=disabled;notify;upgrade
+type UpgradeMode string
+
+const (
+	UpgradeModeDisabled UpgradeMode = "disabled"
+	UpgradeModeNotify   UpgradeMode = "notify"
+	UpgradeModeUpgrade  UpgradeMode = "upgrade"
+)
+
+type UpgradeOptions struct {
+	// Upgrade mode
+	//+kubebuilder:default:=notify
+	Mode UpgradeMode `json:"mode,omitempty"`
 	// The api endpoint used to find the ceph latest version
-	//+kubebuilder:default:="quai.io/ceph/ceph"
-	CephEndpoint string `json:"cephEndpoint,omitempty"`
-	// The api endpoint used to find the rook latest version
-	//+kubebuilder:default:="api.github.com/repos/rook/rook/releases"
-	RookEndpoint string `json:"rookEndpoint,omitempty"`
+	//+kubebuilder:default:="versions.koor.tech"
+	Endpoint string `json:"endpoint,omitempty"`
 	// The schedule to check for new versions. Uses CRON format. Defaults to everyday at midnight
 	//+kubebuilder:default:="0 0 * * *"
 	Schedule string `json:"schedule,omitempty"`
+}
+
+func (uo UpgradeOptions) IsEnabled() bool {
+	return uo.Mode != UpgradeModeDisabled
 }
 
 // KoorClusterStatus defines the observed state of KoorCluster
@@ -73,8 +84,10 @@ type KoorClusterStatus struct {
 type Versions struct {
 	// The version of Ceph
 	Ceph string `json:"ceph,omitempty"`
-	// The version of Rook
-	Rook string `json:"rook,omitempty"`
+	// The version of KSD
+	KSD string `json:"ksd,omitempty"`
+	// The version of the koor Operator
+	KoorOperator string `json:"koorOperator,omitempty"`
 }
 
 type Resources struct {
