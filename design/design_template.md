@@ -1,6 +1,6 @@
 ---
 title: feature-name
-target-version: v0.1.2
+target-version: VERSION
 ---
 
 # Feature Name

@@ -29,7 +29,7 @@ spec:
   upgradeOptions:
     mode: upgrade # or "disabled" or "notify"
     endpoint:  versions.koor.tech # the endpoint used to find ceph and rook versions
-	schedule: 0 0 * * * # cron schedule for version check, defaults to midnight every day
+    schedule: 0 0 * * * # cron schedule for version check, defaults to midnight every day
 status:
   ...
   currentVersions:
@@ -46,26 +46,31 @@ status:
 The controller will install a cronjob that queries the endpoint and updates the latest versions in the koorcluster status, then updates to the latest version.
 
 ### The endpoint
-The endpoint is a server that when given the current returns the latest version that is safe to upgrade to. This is statically configured as json files in the git repository. We could add CI that checks for the latest versions from the source (quay.io / github) and creates issues for a human to test the upgrade. We could even prtially automate the process in the future.
+The endpoint is a server that when given the current versions returns the latest version that is safe to upgrade to. This is statically configured as JSON files in the git repository. We could add CI that checks for the latest versions from the source (Quay.io / GitHub) and creates issues for a human to test the upgrade. We could even partially automate the process in the future.
 
-Inputs:
-- currentVersions:
-  - ksd
-  - ceph
-  - koor-operator
-- kubeVersion:
+**Inputs:**
+```yaml
+currentVersions:
+  ksd: string
+  ceph: string
+  koor-operator: string
+kubeVersion: string
+```
 
-Outputs
-- latestVersions:
-  - ksd
-  - ceph
-  - koor-operator
-
+**Outputs:**
+```yaml
+latestVersions:
+  ksd: string
+  ceph: string
+  koor-operator: string
+```
 ### Risks and Mitigation
 
 - Some users might not like having to connect to an external service to do upgrades
   - This could be mitigated by making our endpoint open source and allow users to install it locally.
 - The endpoint needs polishing and flexibility in design
+- Results may vary be kubeVersion
+  - Test upgrades on multiple k8s versions
 
 ## Alternatives
 
