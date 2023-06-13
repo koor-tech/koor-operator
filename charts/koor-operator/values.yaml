@@ -21,7 +21,7 @@ controllerManager:
       # -- Operator image repository
       repository: gcr.io/kubebuilder/kube-rbac-proxy
       # -- Operator image tag
-      tag: v0.13.1
+      tag: v0.14.1
     # -- RBAC proxy container resources
     resources:
       limits:
