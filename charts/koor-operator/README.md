@@ -30,8 +30,8 @@ The Ceph Operator helm chart will install the basic components necessary to crea
 The `helm install` command deploys the Koor Operator on the Kubernetes cluster in the default configuration. The [configuration](#configuration) section lists the parameters that can be configured during installation. It is recommended that the Koor Operator be installed into the `koor-operator` namespace (you will install your clusters into separate namespaces).
 
 ```console
-helm repo add koor-release https://charts.koor.tech/release
-helm install --create-namespace --namespace koor-operator koor-operator koor-release/koor-operator -f values.yaml
+helm repo add koor-operator https://koor-tech.github.io/koor-operator
+helm install --create-namespace --namespace koor-operator koor-operator koor-operator/koor-operator -f values.yaml
 ```
 
 For example settings, see the next section or [values.yaml](/charts/koor-operator/values.yaml).
@@ -55,9 +55,9 @@ The following table lists the configurable parameters of the rook-operator chart
 | `controllerManager.manager.image.tag` | Operator image tag | `"v0.1.0"` |
 | `controllerManager.manager.resources` | Operator container resources | `{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"128Mi"}}` |
 | `controllerManager.replicas` |  | `1` |
-| `koorCluster` | Koor Cluster specification | `{"spec":{"dashboardEnabled":true,"monitoringEnabled":false,"toolboxEnabled":true,"useAllDevices":true}}` |
+| `koorCluster` | Koor Cluster specification | `{"spec":{"dashboardEnabled":true,"monitoringEnabled":true,"toolboxEnabled":true,"useAllDevices":true}}` |
 | `koorCluster.spec.dashboardEnabled` | Enable the Ceph MGR dashboard. | `true` |
-| `koorCluster.spec.monitoringEnabled` | If monitoring should be enabled, requires the prometheus-operator to be pre-installed. | `false` |
+| `koorCluster.spec.monitoringEnabled` | If monitoring should be enabled, requires the prometheus-operator to be pre-installed. | `true` |
 | `koorCluster.spec.toolboxEnabled` | If the Ceph toolbox, should be deployed as well. | `true` |
 | `koorCluster.spec.useAllDevices` | If all empty + unused devices of the cluster should be used. | `true` |
 | `kubernetesClusterDomain` |  | `"cluster.local"` |
