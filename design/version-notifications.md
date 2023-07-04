@@ -51,18 +51,27 @@ The endpoint is a server that when given the current versions returns the latest
 **Inputs:**
 ```yaml
 currentVersions:
+  kube: string
+  koor-operator: string
   ksd: string
   ceph: string
-  koor-operator: string
-kubeVersion: string
 ```
 
 **Outputs:**
 ```yaml
 latestVersions:
-  ksd: string
-  ceph: string
-  koor-operator: string
+  koor-operator:
+    version: string
+    repository: string
+    chart: string
+  ksd:
+    version: string
+    repository: string
+    chart: string
+  ceph:
+    version: string
+    image: string
+    hash: string
 ```
 ### Risks and Mitigation
 
