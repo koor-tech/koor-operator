@@ -60,8 +60,11 @@ spec:
                     type: string
                   schedule:
                     default: 0 0 * * *
-                    description: The schedule to check for new versions. Uses CRON
-                      format. Defaults to everyday at midnight
+                    description: 'The schedule to check for new versions. Uses CRON
+                      format as specified by https://github.com/robfig/cron/tree/v3.
+                      Defaults to everyday at midnight in the local timezone. To change
+                      the timezone, prefix the schedule with CRON_TZ=<Timezone>. For
+                      example: "CRON_TZ=UTC 0 0 * * *" is midnight UTC.'
                     type: string
                 type: object
               toolboxEnabled:
