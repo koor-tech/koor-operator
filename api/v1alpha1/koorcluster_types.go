@@ -76,18 +76,37 @@ type KoorClusterStatus struct {
 	// Does the cluster meet the minimum recommended resources
 	MeetsMinimumResources bool `json:"meetsMinimumResources"`
 	// The current versions of rook and ceph
-	CurrentVersions Versions `json:"currentVersions,omitempty"`
+	CurrentVersions ProductVersions `json:"currentVersions,omitempty"`
 	// The latest versions of rook and ceph
-	LatestVersions Versions `json:"latestVersions,omitempty"`
+	LatestVersions *DetailedProductVersions `json:"latestVersions,omitempty"`
 }
 
-type Versions struct {
-	// The version of Ceph
-	Ceph string `json:"ceph,omitempty"`
-	// The version of KSD
-	KSD string `json:"ksd,omitempty"`
+type ProductVersions struct {
+	// The version of Kubernetes
+	Kube string `json:"kube,omitempty"`
 	// The version of the koor Operator
 	KoorOperator string `json:"koorOperator,omitempty"`
+	// The version of KSD
+	Ksd string `json:"ksd,omitempty"`
+	// The version of Ceph
+	Ceph string `json:"ceph,omitempty"`
+}
+
+type DetailedProductVersions struct {
+	// The detailed version of the koor Operator
+	KoorOperator *DetailedVersion `json:"koorOperator,omitempty"`
+	// The detailed version of KSD
+	Ksd *DetailedVersion `json:"ksd,omitempty"`
+	// The detailed version of Ceph
+	Ceph *DetailedVersion `json:"ceph,omitempty"`
+}
+
+type DetailedVersion struct {
+	Version        string `json:"version,omitempty"`
+	ImageUri       string `json:"imageUri,omitempty"`
+	ImageHash      string `json:"imageHash,omitempty"`
+	HelmRepository string `json:"helmRepository,omitempty"`
+	HelmChart      string `json:"helmChart,omitempty"`
 }
 
 type Resources struct {

@@ -98,6 +98,7 @@ generate: mockgen controller-gen ## Generate code containing DeepCopy, DeepCopyI
 	$(MOCKGEN) -source=utils/cron_registry.go -package mocks -destination=./mocks/cron_registry.go -self_package=. CronRegistry
 	$(MOCKGEN) -source=utils/version_service.go -package mocks -destination=./mocks/version_service.go -self_package=. VersionService
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	sed -i 's/\(OperatorVersion = \).*/\1"$(VERSION)"/' utils/version.go
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -137,6 +138,7 @@ ensure-generate-is-noop: generate bundle helm
 	@# on make bundle config/manager/kustomization.yaml includes changes, which should be ignored for the below check
 	@git restore config/manager/kustomization.yaml
 	@git diff -s --exit-code api/v1alpha1/zz_generated.*.go || (echo "Build failed: a model has been changed but the generated resources aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
+	@git diff -s --exit-code utils/version.go || (echo "Build failed: the operator version has been changed but the generated files aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code bundle config || (echo "Build failed: the bundle, config files have been changed but the generated bundle, config files aren't up to date. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code bundle.Dockerfile || (echo "Build failed: the bundle.Dockerfile file has been changed. The file should be the same as generated one. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code charts || (echo "Build failed: the helm chart files have been changed but the generated helm chart files aren't up to date. Run 'make helm' and update your PR." && git --no-pager diff && exit 1)

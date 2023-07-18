@@ -88,19 +88,55 @@ spec:
                   ksd:
                     description: The version of KSD
                     type: string
+                  kube:
+                    description: The version of Kubernetes
+                    type: string
                 type: object
               latestVersions:
                 description: The latest versions of rook and ceph
                 properties:
                   ceph:
-                    description: The version of Ceph
-                    type: string
+                    description: The detailed version of Ceph
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
                   koorOperator:
-                    description: The version of the koor Operator
-                    type: string
+                    description: The detailed version of the koor Operator
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
                   ksd:
-                    description: The version of KSD
-                    type: string
+                    description: The detailed version of KSD
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
                 type: object
               meetsMinimumResources:
                 description: Does the cluster meet the minimum recommended resources

@@ -65,7 +65,7 @@ func NewKoorClusterReconciler(mgr ctrl.Manager) *KoorClusterReconciler {
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 		crons:  utils.NewCronRegistry(),
-		vs:     &utils.VersionServiceClient{},
+		vs:     utils.NewVersionServiceClient(),
 	}
 }
 
@@ -188,7 +188,11 @@ func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Re
 	return requests
 }
 
-func (r *KoorClusterReconciler) reconcileNormal(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+func (r *KoorClusterReconciler) reconcileNormal(
+	ctx context.Context,
+	koorCluster *storagev1alpha1.KoorCluster,
+	helmClient hc.Client,
+) error {
 	log := log.FromContext(ctx)
 	if err := r.reconcileResources(ctx, koorCluster); err != nil {
 		return err
@@ -238,10 +242,16 @@ func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorClus
 		// TODO add event for minimum resources
 	}
 
+	koorCluster.Status.CurrentVersions.KoorOperator = utils.OperatorVersion
+
 	return nil
 }
 
-func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+func (r *KoorClusterReconciler) reconcileHelm(
+	ctx context.Context,
+	koorCluster *storagev1alpha1.KoorCluster,
+	helmClient hc.Client,
+) error {
 	log := log.FromContext(ctx)
 	// Add koor-release repo
 	// helm repo add koor-release https://charts.koor.tech/release
@@ -295,7 +305,7 @@ func (r *KoorClusterReconciler) reconcileHelm(ctx context.Context, koorCluster *
 		log.Error(err, "Could not find KSD version")
 	} else {
 		log.Info("Found KSD version", "ksdVersion", ksdVersion)
-		koorCluster.Status.CurrentVersions.KSD = ksdVersion
+		koorCluster.Status.CurrentVersions.Ksd = ksdVersion
 	}
 
 	// Install rook cluster
@@ -415,7 +425,7 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 
 	err := r.crons.Add(jobName, newSchedule, func() {
 		currentKoorCluster := &storagev1alpha1.KoorCluster{}
-		err := r.Get(context.TODO(), nn, currentKoorCluster)
+		err := r.Get(context.Background(), nn, currentKoorCluster)
 		if k8serrors.IsNotFound(err) {
 			log.Info("KoorCluster not found, deleting the job")
 			r.crons.Remove(jobName)
@@ -426,20 +436,15 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 			return
 		}
 
-		currentVersions := utils.Versions{
-			Ceph:         currentKoorCluster.Status.CurrentVersions.Ceph,
-			KSD:          currentKoorCluster.Status.CurrentVersions.KSD,
-			KoorOperator: currentKoorCluster.Status.CurrentVersions.KoorOperator,
-		}
-		latestVersions, err := r.vs.LatestVersions(currentKoorCluster.Spec.UpgradeOptions.Endpoint, currentVersions)
+		latestVersions, err := r.vs.LatestVersions(
+			context.Background(),
+			currentKoorCluster.Spec.UpgradeOptions.Endpoint,
+			&currentKoorCluster.Status.CurrentVersions,
+		)
 		if err != nil {
 			log.Error(err, "unable to find latest versions")
 		} else {
-			currentKoorCluster.Status.LatestVersions = storagev1alpha1.Versions{
-				Ceph:         latestVersions.Ceph,
-				KSD:          latestVersions.KSD,
-				KoorOperator: latestVersions.KoorOperator,
-			}
+			currentKoorCluster.Status.LatestVersions = latestVersions
 		}
 
 		// TODO add event if current versions are not latest
@@ -453,7 +458,11 @@ func (r *KoorClusterReconciler) reconcileNotification(ctx context.Context, koorC
 }
 
 // Handle finalizer and uninstall releases
-func (r *KoorClusterReconciler) handleFinalizer(ctx context.Context, koorCluster *storagev1alpha1.KoorCluster, helmClient hc.Client) error {
+func (r *KoorClusterReconciler) handleFinalizer(
+	ctx context.Context,
+	koorCluster *storagev1alpha1.KoorCluster,
+	helmClient hc.Client,
+) error {
 	log := log.FromContext(ctx)
 	if !controllerutil.ContainsFinalizer(koorCluster, storagev1alpha1.KoorClusterFinalizerName) {
 		log.Info("No Finalizer")

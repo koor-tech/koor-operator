@@ -5,10 +5,11 @@
 package mocks
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	utils "github.com/koor-tech/koor-operator/utils"
+	v1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 )
 
 // MockVersionService is a mock of VersionService interface.
@@ -35,16 +36,16 @@ func (m *MockVersionService) EXPECT() *MockVersionServiceMockRecorder {
 }
 
 // LatestVersions mocks base method.
-func (m *MockVersionService) LatestVersions(endpoint string, currentVersions utils.Versions) (utils.Versions, error) {
+func (m *MockVersionService) LatestVersions(ctx context.Context, endpoint string, versions *v1alpha1.ProductVersions) (*v1alpha1.DetailedProductVersions, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "LatestVersions", endpoint, currentVersions)
-	ret0, _ := ret[0].(utils.Versions)
+	ret := m.ctrl.Call(m, "LatestVersions", ctx, endpoint, versions)
+	ret0, _ := ret[0].(*v1alpha1.DetailedProductVersions)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // LatestVersions indicates an expected call of LatestVersions.
-func (mr *MockVersionServiceMockRecorder) LatestVersions(endpoint, currentVersions interface{}) *gomock.Call {
+func (mr *MockVersionServiceMockRecorder) LatestVersions(ctx, endpoint, versions interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestVersions", reflect.TypeOf((*MockVersionService)(nil).LatestVersions), endpoint, currentVersions)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "LatestVersions", reflect.TypeOf((*MockVersionService)(nil).LatestVersions), ctx, endpoint, versions)
 }

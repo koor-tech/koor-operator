@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package controllers
 
 import (
@@ -35,7 +36,6 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/mocks"
-	"github.com/koor-tech/koor-operator/utils"
 )
 
 var _ = Describe("KoorCluster controller", func() {
@@ -135,10 +135,15 @@ var _ = Describe("KoorCluster controller", func() {
 					return nil
 				})
 
-			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any()).Return(utils.Versions{
-				Ceph: cephLatestVersion,
-				KSD:  ksdLatestVersion,
-			}, nil)
+			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any(), gomock.Any()).Return(
+				&storagev1alpha1.DetailedProductVersions{
+					Ceph: &storagev1alpha1.DetailedVersion{
+						Version: cephLatestVersion,
+					},
+					Ksd: &storagev1alpha1.DetailedVersion{
+						Version: ksdLatestVersion,
+					},
+				}, nil)
 
 			ctx := context.Background()
 
@@ -214,7 +219,7 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(createdKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("60G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("600G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.MeetsMinimumResources).To(BeFalse())
-			Expect(createdKoorCluster.Status.CurrentVersions.KSD).To(Equal(ksdCurrentVersion))
+			Expect(createdKoorCluster.Status.CurrentVersions.Ksd).To(Equal(ksdCurrentVersion))
 			Expect(createdKoorCluster.Status.CurrentVersions.Ceph).To(Equal(cephCurrentVersion))
 
 			By("Checking status after running internal function")
@@ -222,8 +227,8 @@ var _ = Describe("KoorCluster controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, key, createdKoorCluster)
 			}).Should(Succeed())
-			Expect(createdKoorCluster.Status.LatestVersions.KSD).To(Equal(ksdLatestVersion))
-			Expect(createdKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
+			Expect(createdKoorCluster.Status.LatestVersions.Ksd.Version).To(Equal(ksdLatestVersion))
+			Expect(createdKoorCluster.Status.LatestVersions.Ceph.Version).To(Equal(cephLatestVersion))
 
 			By("Adding a new node")
 			newNode := &core.Node{
@@ -298,7 +303,7 @@ var _ = Describe("KoorCluster controller", func() {
 					}),
 			)
 
-			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any()).Return(utils.Versions{}, fmt.Errorf("failed"))
+			mockVS.EXPECT().LatestVersions(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, fmt.Errorf("failed"))
 
 			By("Checking status after updating notification schedule")
 			Expect(reconciler.reconcileNormal(ctx, afterNodeKoorCluster, mockHelmClient)).To(Succeed())
@@ -316,8 +321,8 @@ var _ = Describe("KoorCluster controller", func() {
 			Eventually(func() error {
 				return k8sClient.Get(ctx, key, updatedKoorCluster)
 			}).Should(Succeed())
-			Expect(updatedKoorCluster.Status.LatestVersions.KSD).To(Equal(ksdLatestVersion))
-			Expect(updatedKoorCluster.Status.LatestVersions.Ceph).To(Equal(cephLatestVersion))
+			Expect(updatedKoorCluster.Status.LatestVersions.Ksd.Version).To(Equal(ksdLatestVersion))
+			Expect(updatedKoorCluster.Status.LatestVersions.Ceph.Version).To(Equal(cephLatestVersion))
 		})
 	})
 
