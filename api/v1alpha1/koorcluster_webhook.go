@@ -17,8 +17,9 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"github.com/robfig/cron/v3"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/utils/pointer"
+	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -40,19 +41,6 @@ var _ webhook.Defaulter = &KoorCluster{}
 // Default implements webhook.Defaulter so a webhook will be registered for the type
 func (r *KoorCluster) Default() {
 	koorclusterlog.Info("default", "name", r.Name)
-
-	if r.Spec.UseAllDevices == nil {
-		r.Spec.UseAllDevices = pointer.Bool(true)
-	}
-	if r.Spec.MonitoringEnabled == nil {
-		r.Spec.MonitoringEnabled = pointer.Bool(true)
-	}
-	if r.Spec.DashboardEnabled == nil {
-		r.Spec.DashboardEnabled = pointer.Bool(true)
-	}
-	if r.Spec.ToolboxEnabled == nil {
-		r.Spec.ToolboxEnabled = pointer.Bool(true)
-	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
@@ -64,16 +52,14 @@ var _ webhook.Validator = &KoorCluster{}
 func (r *KoorCluster) ValidateCreate() error {
 	koorclusterlog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
-	return nil
+	return r.validateNotificationSchedule()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *KoorCluster) ValidateUpdate(old runtime.Object) error {
 	koorclusterlog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
-	return nil
+	return r.validateNotificationSchedule()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -81,5 +67,17 @@ func (r *KoorCluster) ValidateDelete() error {
 	koorclusterlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
+	return nil
+}
+
+func (r *KoorCluster) validateNotificationSchedule() *field.Error {
+	if !r.Spec.UpgradeOptions.IsEnabled() {
+		return nil
+	}
+
+	schedule := r.Spec.UpgradeOptions.Schedule
+	if _, err := cron.ParseStandard(schedule); err != nil {
+		return field.Invalid(field.NewPath("spec").Child("notificationOptions").Child("schedule"), schedule, err.Error())
+	}
 	return nil
 }

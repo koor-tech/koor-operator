@@ -36,21 +36,111 @@ spec:
             description: KoorClusterSpec defines the desired state of KoorCluster
             properties:
               dashboardEnabled:
+                default: true
                 description: Enable the ceph dashboard for viewing cluster status
                 type: boolean
               monitoringEnabled:
+                default: true
                 description: Enable monitoring. Requires Prometheus to be pre-installed.
                 type: boolean
+              notificationOptions:
+                description: Specifies the notification options for new ceph versions
+                properties:
+                  endpoint:
+                    default: versions.koor.tech
+                    description: The api endpoint used to find the ceph latest version
+                    type: string
+                  mode:
+                    default: notify
+                    description: Upgrade mode
+                    enum:
+                    - disabled
+                    - notify
+                    - upgrade
+                    type: string
+                  schedule:
+                    default: 0 0 * * *
+                    description: 'The schedule to check for new versions. Uses CRON
+                      format as specified by https://github.com/robfig/cron/tree/v3.
+                      Defaults to everyday at midnight in the local timezone. To change
+                      the timezone, prefix the schedule with CRON_TZ=<Timezone>. For
+                      example: "CRON_TZ=UTC 0 0 * * *" is midnight UTC.'
+                    type: string
+                type: object
               toolboxEnabled:
+                default: true
                 description: Installs a debugging toolbox deployment
                 type: boolean
               useAllDevices:
+                default: true
                 description: Use all devices on nodes
                 type: boolean
             type: object
           status:
             description: KoorClusterStatus defines the observed state of KoorCluster
             properties:
+              currentVersions:
+                description: The current versions of rook and ceph
+                properties:
+                  ceph:
+                    description: The version of Ceph
+                    type: string
+                  koorOperator:
+                    description: The version of the koor Operator
+                    type: string
+                  ksd:
+                    description: The version of KSD
+                    type: string
+                  kube:
+                    description: The version of Kubernetes
+                    type: string
+                type: object
+              latestVersions:
+                description: The latest versions of rook and ceph
+                properties:
+                  ceph:
+                    description: The detailed version of Ceph
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  koorOperator:
+                    description: The detailed version of the koor Operator
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                  ksd:
+                    description: The detailed version of KSD
+                    properties:
+                      helmChart:
+                        type: string
+                      helmRepository:
+                        type: string
+                      imageHash:
+                        type: string
+                      imageUri:
+                        type: string
+                      version:
+                        type: string
+                    type: object
+                type: object
               meetsMinimumResources:
                 description: Does the cluster meet the minimum recommended resources
                 type: boolean

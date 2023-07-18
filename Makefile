@@ -94,8 +94,11 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: mockgen controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+	$(MOCKGEN) -source=utils/cron_registry.go -package mocks -destination=./mocks/cron_registry.go -self_package=. CronRegistry
+	$(MOCKGEN) -source=utils/version_service.go -package mocks -destination=./mocks/version_service.go -self_package=. VersionService
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+	sed -i 's/\(OperatorVersion = \).*/\1"$(VERSION)"/' utils/version.go
 
 .PHONY: fmt
 fmt: ## Run go fmt against code.
@@ -128,7 +131,6 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 	./scripts/ignore_values_comments.sh
 	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
-	sed -i 's/^\certManager:/certmanager:/' charts/koor-operator/values.yaml
 
 
 .PHONY: ensure-generate-is-noop
@@ -136,6 +138,7 @@ ensure-generate-is-noop: generate bundle helm
 	@# on make bundle config/manager/kustomization.yaml includes changes, which should be ignored for the below check
 	@git restore config/manager/kustomization.yaml
 	@git diff -s --exit-code api/v1alpha1/zz_generated.*.go || (echo "Build failed: a model has been changed but the generated resources aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
+	@git diff -s --exit-code utils/version.go || (echo "Build failed: the operator version has been changed but the generated files aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code bundle config || (echo "Build failed: the bundle, config files have been changed but the generated bundle, config files aren't up to date. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code bundle.Dockerfile || (echo "Build failed: the bundle.Dockerfile file has been changed. The file should be the same as generated one. Run 'make bundle' and update your PR." && git --no-pager diff && exit 1)
 	@git diff -s --exit-code charts || (echo "Build failed: the helm chart files have been changed but the generated helm chart files aren't up to date. Run 'make helm' and update your PR." && git --no-pager diff && exit 1)
@@ -254,6 +257,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 HELMIFY ?= $(LOCALBIN)/helmify
 CMCTL ?= $(LOCALBIN)/cmctl
 OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
+MOCKGEN ?= $(LOCALBIN)/mockgen
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
@@ -261,6 +265,7 @@ CONTROLLER_TOOLS_VERSION ?= v0.10.0
 HELMIFY_VERSION ?= v0.4.3
 CERTMANAGER_VERSION ?= 1.11.0
 OPERATOR_SDK_VERSION ?= 1.26.0
+MOCKGEN_VERSION ?= v1.6.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -371,3 +376,8 @@ helm-docs: $(HELM_DOCS) ## Use helm-docs to generate documentation from helm cha
 		-o README.md \
 		-t README.gotmpl.md \
 		-t _templates.gotmpl
+
+.PHONY: mockgen
+mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
+$(MOCKGEN): $(LOCALBIN)
+	test -s $(LOCALBIN)/mockgen || GOBIN=$(LOCALBIN) go install github.com/golang/mock/mockgen@$(MOCKGEN_VERSION)

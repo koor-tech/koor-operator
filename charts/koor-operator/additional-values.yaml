@@ -11,3 +11,5 @@ koorCluster:
     dashboardEnabled: true
     # -- If the Ceph toolbox, should be deployed as well.
     toolboxEnabled: true
+    notificationOptions:
+      enabled: true

@@ -1,3 +1,4 @@
+# NOTE: commit your changes before running make or they will be lost.
 certmanager:
   # -- Enable cert-maanger
   enabled: true
@@ -21,7 +22,7 @@ controllerManager:
       # -- Operator image repository
       repository: gcr.io/kubebuilder/kube-rbac-proxy
       # -- Operator image tag
-      tag: v0.14.1
+      tag: v0.13.1
     # -- RBAC proxy container resources
     resources:
       limits:
@@ -46,7 +47,7 @@ controllerManager:
       # -- Operator image repository
       repository: docker.io/koorinc/koor-operator
       # -- Operator image tag
-      tag: v0.1.0
+      tag: v0.3.0
     # -- Operator container resources
     resources:
       limits:
@@ -85,3 +86,5 @@ koorCluster:
     dashboardEnabled: true
     # -- If the Ceph toolbox, should be deployed as well.
     toolboxEnabled: true
+    notificationOptions:
+      enabled: true
