@@ -36,6 +36,7 @@ import (
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/mocks"
+	"github.com/koor-tech/koor-operator/utils"
 )
 
 var _ = Describe("KoorCluster controller", func() {
@@ -53,6 +54,7 @@ var _ = Describe("KoorCluster controller", func() {
 		cephCurrentVersion = "v17.2.5"
 		ksdLatestVersion   = "v1.11.1"
 		cephLatestVersion  = "v17.2.6"
+		kubeVersion        = "1.27.3"
 		defaultSchedule    = "0 0 * * *"
 		newSchedule        = "1 0 * * *"
 	)
@@ -160,6 +162,9 @@ var _ = Describe("KoorCluster controller", func() {
 							core.ResourceMemory:           resource.MustParse("10G"),
 							core.ResourceEphemeralStorage: resource.MustParse("100G"),
 						},
+						NodeInfo: core.NodeSystemInfo{
+							KubeletVersion: kubeVersion,
+						},
 					},
 				},
 				{
@@ -219,6 +224,8 @@ var _ = Describe("KoorCluster controller", func() {
 			Expect(createdKoorCluster.Status.TotalResources.Memory.Equal(resource.MustParse("60G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.TotalResources.Storage.Equal(resource.MustParse("600G"))).To(BeTrue())
 			Expect(createdKoorCluster.Status.MeetsMinimumResources).To(BeFalse())
+			Expect(createdKoorCluster.Status.CurrentVersions.Kube).To(Equal(kubeVersion))
+			Expect(createdKoorCluster.Status.CurrentVersions.KoorOperator).To(Equal(utils.OperatorVersion))
 			Expect(createdKoorCluster.Status.CurrentVersions.Ksd).To(Equal(ksdCurrentVersion))
 			Expect(createdKoorCluster.Status.CurrentVersions.Ceph).To(Equal(cephCurrentVersion))
 

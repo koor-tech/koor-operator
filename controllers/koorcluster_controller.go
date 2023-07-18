@@ -228,6 +228,7 @@ func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorClus
 	resources.Storage = &resource.Quantity{}
 	resources.Cpu = &resource.Quantity{}
 	resources.Memory = &resource.Quantity{}
+	kubeVersion := ""
 
 	// sum resources
 	for idx := range nodeList.Items {
@@ -235,6 +236,9 @@ func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorClus
 		resources.Storage.Add(*capacity.StorageEphemeral())
 		resources.Cpu.Add(*capacity.Cpu())
 		resources.Memory.Add(*capacity.Memory())
+		if kubeVersion == "" {
+			kubeVersion = nodeList.Items[idx].Status.NodeInfo.KubeletVersion
+		}
 	}
 	koorCluster.Status.MeetsMinimumResources = resources.MeetsMinimum()
 	if !koorCluster.Status.MeetsMinimumResources {
@@ -242,6 +246,7 @@ func (r *KoorClusterReconciler) reconcileResources(ctx context.Context, koorClus
 		// TODO add event for minimum resources
 	}
 
+	koorCluster.Status.CurrentVersions.Kube = kubeVersion
 	koorCluster.Status.CurrentVersions.KoorOperator = utils.OperatorVersion
 
 	return nil
