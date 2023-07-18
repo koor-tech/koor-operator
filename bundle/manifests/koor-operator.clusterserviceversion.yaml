@@ -30,7 +30,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-07-18T05:20:27Z"
+    createdAt: "2023-07-18T17:58:39Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: koor-operator.v0.3.0
@@ -157,7 +157,7 @@ spec:
                 - --upstream=http://127.0.0.1:8080/
                 - --logtostderr=true
                 - --v=0
-                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.1
+                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.14.1
                 name: kube-rbac-proxy
                 ports:
                 - containerPort: 8443
