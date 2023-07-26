@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/bufbuild/connect-go v1.9.0
+	github.com/bufbuild/connect-go v1.10.0
 	github.com/golang/mock v1.6.0
 	github.com/itchyny/gojq v0.12.13
 	github.com/koor-tech/version-service v0.1.1
