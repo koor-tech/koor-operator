@@ -43,7 +43,11 @@ spec:
                 default: true
                 description: Enable monitoring. Requires Prometheus to be pre-installed.
                 type: boolean
-              notificationOptions:
+              toolboxEnabled:
+                default: true
+                description: Installs a debugging toolbox deployment
+                type: boolean
+              upgradeOptions:
                 description: Specifies the notification options for new ceph versions
                 properties:
                   endpoint:
@@ -67,10 +71,6 @@ spec:
                       example: "CRON_TZ=UTC 0 0 * * *" is midnight UTC.'
                     type: string
                 type: object
-              toolboxEnabled:
-                default: true
-                description: Installs a debugging toolbox deployment
-                type: boolean
               useAllDevices:
                 default: true
                 description: Use all devices on nodes
