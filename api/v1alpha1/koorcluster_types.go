@@ -41,7 +41,7 @@ type KoorClusterSpec struct {
 	//+kubebuilder:default:=true
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 	// Specifies the notification options for new ceph versions
-	UpgradeOptions UpgradeOptions `json:"notificationOptions,omitempty"`
+	UpgradeOptions UpgradeOptions `json:"upgradeOptions,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=disabled;notify;upgrade

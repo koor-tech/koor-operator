@@ -18,7 +18,9 @@ package v1alpha1
 
 import (
 	"github.com/robfig/cron/v3"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -52,14 +54,14 @@ var _ webhook.Validator = &KoorCluster{}
 func (r *KoorCluster) ValidateCreate() error {
 	koorclusterlog.Info("validate create", "name", r.Name)
 
-	return r.validateNotificationSchedule()
+	return r.validateKoorCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *KoorCluster) ValidateUpdate(old runtime.Object) error {
 	koorclusterlog.Info("validate update", "name", r.Name)
 
-	return r.validateNotificationSchedule()
+	return r.validateKoorCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -68,6 +70,19 @@ func (r *KoorCluster) ValidateDelete() error {
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil
+}
+
+func (r *KoorCluster) validateKoorCluster() error {
+	var allErrs field.ErrorList
+	if err := r.validateNotificationSchedule(); err != nil {
+		allErrs = append(allErrs, err)
+	}
+	if len(allErrs) == 0 {
+		return nil
+	}
+	return apierrors.NewInvalid(
+		schema.GroupKind{Group: "storage.koor.tech", Kind: "KoorCluster"},
+		r.Name, allErrs)
 }
 
 func (r *KoorCluster) validateNotificationSchedule() *field.Error {

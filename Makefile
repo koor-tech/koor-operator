@@ -68,7 +68,7 @@ SHELL = /usr/bin/env bash -o pipefail
 .SHELLFLAGS = -ec
 
 .PHONY: all
-all: build helm bundle
+all: build helm bundle docs
 
 ##@ General
 
@@ -126,15 +126,19 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	# We need to add the `additional-values.yaml` here because of:
 	# https://github.com/arttor/helmify/issues/67
 	# https://github.com/arttor/helmify/issues/68
-	$(KUSTOMIZE) build config/default | \
+	$(KUSTOMIZE) build config/helm | \
 		$(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 	./scripts/ignore_values_comments.sh
 	sed -i 's/^\(appVersion: \).*/\1"v$(VERSION)"/' charts/koor-operator/Chart.yaml
+	sed -i 's/^\(version: \).*/\1$(VERSION)/' charts/koor-operator/Chart.yaml
 
+
+.PHONY: docs
+docs: helm-docs ## Generate documentation files
 
 .PHONY: ensure-generate-is-noop
-ensure-generate-is-noop: generate bundle helm
+ensure-generate-is-noop: generate bundle helm docs
 	@# on make bundle config/manager/kustomization.yaml includes changes, which should be ignored for the below check
 	@git restore config/manager/kustomization.yaml
 	@git diff -s --exit-code api/v1alpha1/zz_generated.*.go || (echo "Build failed: a model has been changed but the generated resources aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)
@@ -263,7 +267,7 @@ MOCKGEN ?= $(LOCALBIN)/mockgen
 KUSTOMIZE_VERSION ?= v3.8.7
 CONTROLLER_TOOLS_VERSION ?= v0.10.0
 HELMIFY_VERSION ?= v0.4.3
-CERTMANAGER_VERSION ?= 1.11.0
+CERTMANAGER_VERSION ?= 1.12.3
 OPERATOR_SDK_VERSION ?= 1.26.0
 MOCKGEN_VERSION ?= v1.6.0
 
@@ -371,6 +375,7 @@ $(HELM_DOCS): ## Installs helm-docs
 	@mv $(TOOLS_HOST_DIR)/tmp/helm-docs $(HELM_DOCS)
 	@rm -fr $(TOOLS_HOST_DIR)/tmp
 
+.PHONY: helm-docs
 helm-docs: $(HELM_DOCS) ## Use helm-docs to generate documentation from helm charts
 	$(HELM_DOCS) -c charts/koor-operator \
 		-o README.md \

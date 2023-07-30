@@ -1,0 +1,5 @@
+bases:
+  - ../default
+
+patchesStrategicMerge:
+  - patches/helm_patch.yaml

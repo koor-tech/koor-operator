@@ -11,5 +11,13 @@ koorCluster:
     dashboardEnabled: true
     # -- If the Ceph toolbox, should be deployed as well.
     toolboxEnabled: true
-    notificationOptions:
-      enabled: true
+    upgradeOptions:
+      # -- Upgrade mode. Options: disabled, notify, upgrade.
+      mode: notify
+      # -- The api endpoint used to find the ceph latest version
+      endpoint: versions.koor.tech
+      # -- The schedule to check for new versions. Uses CRON format as specified by https://github.com/robfig/cron/tree/v3.
+      # Defaults to everyday at midnight in the local timezone.
+      # To change the timezone, prefix the schedule with CRON_TZ=<Timezone>.
+      # For example: "CRON_TZ=UTC 0 0 * * *" is midnight UTC.
+      schedule: 0 0 * * *

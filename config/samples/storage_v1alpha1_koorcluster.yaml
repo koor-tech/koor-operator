@@ -14,5 +14,7 @@ spec:
   monitoringEnabled: true
   dashboardEnabled: true
   toolboxEnabled: true
-  notificationOptions:
+  upgradeOptions:
     mode: notify
+    endpoint: versions.koor.tech
+    schedule: 0 0 * * *
