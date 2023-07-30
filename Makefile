@@ -126,7 +126,7 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 	# We need to add the `additional-values.yaml` here because of:
 	# https://github.com/arttor/helmify/issues/67
 	# https://github.com/arttor/helmify/issues/68
-	$(KUSTOMIZE) build config/default | \
+	$(KUSTOMIZE) build config/helm | \
 		$(HELMIFY) -v -cert-manager-as-subchart charts/koor-operator
 	cat charts/koor-operator/additional-values.yaml >> charts/koor-operator/values.yaml
 	./scripts/ignore_values_comments.sh
