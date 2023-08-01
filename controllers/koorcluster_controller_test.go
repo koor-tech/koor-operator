@@ -43,8 +43,8 @@ var _ = Describe("KoorCluster controller", func() {
 	const (
 		KoorClusterNamePrefix = "test-koorcluster-"
 		KoorClusterNamespace  = "default"
-		RookReleaseName       = KoorClusterNamespace + "-rook-ceph"
-		ClusterReleaseName    = KoorClusterNamespace + "-rook-ceph-cluster"
+		KsdReleaseName        = "ksd-test"
+		KsdClusterReleaseName = "ksd-cluster-test"
 
 		timeout  = time.Second * 10
 		duration = time.Second * 10
@@ -109,12 +109,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdReleaseName))
 						return rookRelease, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdClusterReleaseName))
 						return clusterRelease, nil
 					}),
 			)
@@ -207,6 +207,10 @@ var _ = Describe("KoorCluster controller", func() {
 					Name:      kcname,
 					Namespace: KoorClusterNamespace,
 				},
+				Spec: storagev1alpha1.KoorClusterSpec{
+					KsdReleaseName:        KsdReleaseName,
+					KsdClusterReleaseName: KsdClusterReleaseName,
+				},
 			}
 			Expect(k8sClient.Create(ctx, koorCluster)).To(Succeed())
 			Expect(reconciler.reconcileNormal(ctx, koorCluster, mockHelmClient)).To(Succeed())
@@ -256,12 +260,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdReleaseName))
 						return rookRelease, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdClusterReleaseName))
 						return clusterRelease, nil
 					}),
 			)
@@ -291,12 +295,12 @@ var _ = Describe("KoorCluster controller", func() {
 				mockHelmClient.EXPECT().UpdateChartRepos().Return(nil),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(RookReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdReleaseName))
 						return rookRelease, nil
 					}),
 				mockHelmClient.EXPECT().InstallOrUpgradeChart(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx interface{}, chartSpec *hc.ChartSpec, opts interface{}) (interface{}, error) {
-						Expect(chartSpec.ReleaseName).To(Equal(ClusterReleaseName))
+						Expect(chartSpec.ReleaseName).To(Equal(KsdClusterReleaseName))
 						return clusterRelease, nil
 					}),
 			)
@@ -336,8 +340,8 @@ var _ = Describe("KoorCluster controller", func() {
 	Context("When finalizing a KoorCluster", func() {
 		It("Should uninstall the operator and the cluster helm charts", func() {
 			gomock.InOrder(
-				mockHelmClient.EXPECT().UninstallReleaseByName(ClusterReleaseName).Return(nil),
-				mockHelmClient.EXPECT().UninstallReleaseByName(RookReleaseName).Return(nil),
+				mockHelmClient.EXPECT().UninstallReleaseByName(KsdClusterReleaseName).Return(nil),
+				mockHelmClient.EXPECT().UninstallReleaseByName(KsdReleaseName).Return(nil),
 			)
 
 			By("By creating a KoorCluster with Finalizer")
@@ -351,6 +355,10 @@ var _ = Describe("KoorCluster controller", func() {
 					GenerateName: KoorClusterNamePrefix,
 					Namespace:    KoorClusterNamespace,
 					Finalizers:   []string{storagev1alpha1.KoorClusterFinalizerName},
+				},
+				Spec: storagev1alpha1.KoorClusterSpec{
+					KsdReleaseName:        KsdReleaseName,
+					KsdClusterReleaseName: KsdClusterReleaseName,
 				},
 			}
 			Expect(k8sClient.Create(ctx, koorCluster)).To(Succeed())

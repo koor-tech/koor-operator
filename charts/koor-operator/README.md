@@ -55,8 +55,9 @@ The following table lists the configurable parameters of the rook-operator chart
 | `controllerManager.manager.image.tag` | Operator image tag | `"v0.3.1"` |
 | `controllerManager.manager.resources` | Operator container resources | `{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"128Mi"}}` |
 | `controllerManager.replicas` |  | `1` |
-| `koorCluster` | Koor Cluster specification | `{"spec":{"dashboardEnabled":true,"monitoringEnabled":true,"toolboxEnabled":true,"upgradeOptions":{"endpoint":"versions.koor.tech","mode":"notify","schedule":"0 0 * * *"},"useAllDevices":true}}` |
 | `koorCluster.spec.dashboardEnabled` | Enable the Ceph MGR dashboard. | `true` |
+| `koorCluster.spec.ksdClusterReleaseName` | The name to use for KSD cluster helm release. | `"ksd-cluster"` |
+| `koorCluster.spec.ksdReleaseName` | The name to use for KSD helm release. | `"ksd"` |
 | `koorCluster.spec.monitoringEnabled` | If monitoring should be enabled, requires the prometheus-operator to be pre-installed. | `true` |
 | `koorCluster.spec.toolboxEnabled` | If the Ceph toolbox, should be deployed as well. | `true` |
 | `koorCluster.spec.upgradeOptions.endpoint` | The api endpoint used to find the ceph latest version | `"versions.koor.tech"` |
