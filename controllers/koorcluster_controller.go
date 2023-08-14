@@ -291,7 +291,7 @@ func (r *KoorClusterReconciler) reconcileHelm(
 	}
 
 	operatorChartSpec := hc.ChartSpec{
-		ReleaseName:     koorCluster.Namespace + "-rook-ceph",
+		ReleaseName:     koorCluster.Spec.KsdReleaseName,
 		ChartName:       "koor-release/rook-ceph",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
@@ -324,7 +324,7 @@ func (r *KoorClusterReconciler) reconcileHelm(
 	}
 
 	clusterChartSpec := hc.ChartSpec{
-		ReleaseName:     koorCluster.Namespace + "-rook-ceph-cluster",
+		ReleaseName:     koorCluster.Spec.KsdClusterReleaseName,
 		ChartName:       "koor-release/rook-ceph-cluster",
 		Namespace:       koorCluster.Namespace,
 		CreateNamespace: true,
@@ -474,12 +474,12 @@ func (r *KoorClusterReconciler) handleFinalizer(
 		return nil
 	}
 
-	releaseName := koorCluster.Namespace + "-rook-ceph-cluster"
+	releaseName := koorCluster.Spec.KsdClusterReleaseName
 	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
 		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
 	}
 
-	releaseName = koorCluster.Namespace + "-rook-ceph"
+	releaseName = koorCluster.Spec.KsdReleaseName
 	if err := helmClient.UninstallReleaseByName(releaseName); err != nil {
 		log.Error(err, "Failed to uninstall release", "releaseName", releaseName)
 	}

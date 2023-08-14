@@ -42,6 +42,12 @@ type KoorClusterSpec struct {
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
 	// Specifies the notification options for new ceph versions
 	UpgradeOptions UpgradeOptions `json:"upgradeOptions,omitempty"`
+	// The name to use for KSD helm release.
+	//+kubebuilder:default:=ksd
+	KsdReleaseName string `json:"ksdReleaseName,omitempty"`
+	// The name to use for KSD cluster helm release.
+	//+kubebuilder:default:=ksd-cluster
+	KsdClusterReleaseName string `json:"ksdClusterReleaseName,omitempty"`
 }
 
 // +kubebuilder:validation:Enum=disabled;notify;upgrade
