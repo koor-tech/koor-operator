@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: docker.io/koorinc/koor-operator
-  newTag: v0.3.3
+  newTag: v0.3.4
