@@ -13,6 +13,42 @@ entries:
       artifacthub.io/operator: "true"
       artifacthub.io/operatorCapabilities: basic install
     apiVersion: v2
+    appVersion: v0.3.3
+    created: "2023-08-17T23:25:27.064002561Z"
+    dependencies:
+    - alias: certmanager
+      condition: certmanager.enabled
+      name: cert-manager
+      repository: https://charts.jetstack.io
+      version: v1.12.3
+    description: A Helm chart for deploying the Koor Operator to Kubernetes
+    digest: e247718702ad9be37ad6c933f6082cd1577fab894f868988bb651d1b034cf31f
+    icon: https://koor.tech/images/favicon.svg
+    keywords:
+    - storage
+    - operator
+    - rook
+    - ceph
+    kubeVersion: '>=1.19.0'
+    name: koor-operator
+    sources:
+    - https://github.com/koor-tech/koor-operator/
+    type: application
+    urls:
+    - https://github.com/koor-tech/koor-operator/releases/download/koor-operator-0.3.3/koor-operator-0.3.3.tgz
+    version: 0.3.3
+  - annotations:
+      artifacthub.io/category: storage
+      artifacthub.io/crds: |
+        - kind: KoorCluster
+          version: v1
+          name: koorcluster
+          displayName: Koor Cluster
+          description: "Resource to control the creation of a Koor Storage Cluster."
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/operator: "true"
+      artifacthub.io/operatorCapabilities: basic install
+    apiVersion: v2
     appVersion: v0.3.1
     created: "2023-07-30T15:15:22.72265081Z"
     dependencies:
@@ -258,4 +294,4 @@ entries:
     urls:
     - https://github.com/koor-tech/koor-operator/releases/download/koor-operator-0.1.0/koor-operator-0.1.0.tgz
     version: 0.1.0
-generated: "2023-07-30T15:15:22.722777517Z"
+generated: "2023-08-17T23:25:27.064056363Z"
