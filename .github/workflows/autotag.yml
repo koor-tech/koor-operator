@@ -16,7 +16,7 @@ jobs:
       # Extract version data and create tag
       - uses: butlerlogic/action-autotag@1.1.2
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.AUTOTAG_TOKEN }}"
         with:
           strategy: regex
           root: "VERSION"
