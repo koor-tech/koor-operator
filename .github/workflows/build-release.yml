@@ -55,7 +55,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
-          draft: true
 
   build-bundle:
     name: Build and push bundle Docker image to Docker Hub
@@ -126,6 +125,8 @@ jobs:
           version: v3.8.1
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.5.0
+        uses: koor-tech/chart-releaser-action@exclude-tags
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          exclude_tags: v*
