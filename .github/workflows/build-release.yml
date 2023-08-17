@@ -2,8 +2,6 @@ name: Build and Release
 
 on:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
@@ -17,16 +15,6 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
-
-      # Extract version data and create tag
-      - uses: butlerlogic/action-autotag@1.1.2
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-        with:
-          strategy: regex
-          root: "VERSION"
-          regex_pattern: "(.*)"
-          tag_prefix: "v"
 
       - name: Docker meta
         id: meta
@@ -65,7 +53,6 @@ jobs:
 
       - name: GitHub Release
         uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
         with:
           generate_release_notes: true
           draft: true
@@ -117,6 +104,7 @@ jobs:
   helm-release:
     # Depending on default permission settings for your org (contents being read-only or read-write for workloads), you will have to add permissions
     # see: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#modifying-the-permissions-for-the-github_token
+    name: Release helm chart
     permissions:
       contents: write
     runs-on: ubuntu-latest

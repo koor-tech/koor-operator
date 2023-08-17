@@ -1,0 +1,24 @@
+name: Autotag
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  autotag:
+    name: Create tag if version changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      # Extract version data and create tag
+      - uses: butlerlogic/action-autotag@1.1.2
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        with:
+          strategy: regex
+          root: "VERSION"
+          regex_pattern: "(.*)"
+          tag_prefix: "v"
