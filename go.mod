@@ -7,7 +7,7 @@ require (
 	github.com/bufbuild/connect-go v1.9.0
 	github.com/golang/mock v1.6.0
 	github.com/itchyny/gojq v0.12.13
-	github.com/koor-tech/version-service v0.1.1
+	github.com/koor-tech/version-service v0.1.2
 	github.com/mittwald/go-helm-client v0.12.1
 	github.com/onsi/ginkgo/v2 v2.11.0
 	github.com/onsi/gomega v1.27.8
