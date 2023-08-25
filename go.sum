@@ -420,6 +420,8 @@ github.com/koor-tech/version-service v0.1.1 h1:lvZmoe+t4dpxaw2YODzaDJdkkeYNe5DUH
 github.com/koor-tech/version-service v0.1.1/go.mod h1:MVBl8jFCqHMb/bLvoZB8WBDsQiSnMp9t9CWlebEJ+78=
 github.com/koor-tech/version-service v0.1.2 h1:eoXKX54l3KF9ztWapwTDP9b49GmDFh45KJdTXkNTf/0=
 github.com/koor-tech/version-service v0.1.2/go.mod h1:MVBl8jFCqHMb/bLvoZB8WBDsQiSnMp9t9CWlebEJ+78=
+github.com/koor-tech/version-service v0.1.3 h1:X+d7ArE9iRYpx31E3auSj3i5sP4irlI3Fnv+84EJDUI=
+github.com/koor-tech/version-service v0.1.3/go.mod h1:MVBl8jFCqHMb/bLvoZB8WBDsQiSnMp9t9CWlebEJ+78=
 github.com/kortschak/utter v1.0.1/go.mod h1:vSmSjbyrlKjjsL71193LmzBOKgwePk9DH6uFaWHIInc=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
 github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515/go.mod h1:+0opPa2QZZtGFBFZlji/RkVcI2GknAs/DXo4wKdlNEc=
