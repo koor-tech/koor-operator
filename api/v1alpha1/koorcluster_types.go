@@ -40,7 +40,7 @@ type KoorClusterSpec struct {
 	// Installs a debugging toolbox deployment
 	//+kubebuilder:default:=true
 	ToolboxEnabled *bool `json:"toolboxEnabled,omitempty"`
-	// Specifies the notification options for new ceph versions
+	// Specifies the upgrade options for new ceph versions
 	UpgradeOptions UpgradeOptions `json:"upgradeOptions,omitempty"`
 	// The name to use for KSD helm release.
 	//+kubebuilder:default:=ksd

@@ -74,7 +74,7 @@ func (r *KoorCluster) ValidateDelete() error {
 
 func (r *KoorCluster) validateKoorCluster() error {
 	var allErrs field.ErrorList
-	if err := r.validateNotificationSchedule(); err != nil {
+	if err := r.validateUpgradeSchedule(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if len(allErrs) == 0 {
@@ -85,14 +85,14 @@ func (r *KoorCluster) validateKoorCluster() error {
 		r.Name, allErrs)
 }
 
-func (r *KoorCluster) validateNotificationSchedule() *field.Error {
+func (r *KoorCluster) validateUpgradeSchedule() *field.Error {
 	if !r.Spec.UpgradeOptions.IsEnabled() {
 		return nil
 	}
 
 	schedule := r.Spec.UpgradeOptions.Schedule
 	if _, err := cron.ParseStandard(schedule); err != nil {
-		return field.Invalid(field.NewPath("spec").Child("notificationOptions").Child("schedule"), schedule, err.Error())
+		return field.Invalid(field.NewPath("spec").Child("upgradeOptions").Child("schedule"), schedule, err.Error())
 	}
 	return nil
 }
