@@ -66,7 +66,7 @@ spec:
                 description: Installs a debugging toolbox deployment
                 type: boolean
               upgradeOptions:
-                description: Specifies the notification options for new ceph versions
+                description: Specifies the upgrade options for new ceph versions
                 properties:
                   endpoint:
                     default: versions.koor.tech
