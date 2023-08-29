@@ -1,8 +1,8 @@
 # NOTE: commit your changes before running make or they will be lost.
 certmanager:
-  # -- Enable cert-maanger
+  # -- Install cert-manger. Set to false to use an existing cert-manager
   enabled: true
-  # -- If cert-manager's CRDs should be installed through Helm.
+  # -- If cert-manager's CRDs should be installed through Helm
   installCRDs: true
 controllerManager:
   # RBAC proxy configuration
