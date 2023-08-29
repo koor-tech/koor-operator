@@ -42,8 +42,8 @@ The following table lists the configurable parameters of the rook-operator chart
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `certmanager.enabled` | Enable cert-maanger | `true` |
-| `certmanager.installCRDs` | If cert-manager's CRDs should be installed through Helm. | `true` |
+| `certmanager.enabled` | Install cert-manger. Set to false to use an existing cert-manager | `true` |
+| `certmanager.installCRDs` | If cert-manager's CRDs should be installed through Helm | `true` |
 | `controllerManager.kubeRbacProxy.args` | RBAC proxy args | `["--secure-listen-address=0.0.0.0:8443","--upstream=http://127.0.0.1:8080/","--logtostderr=true","--v=0"]` |
 | `controllerManager.kubeRbacProxy.containerSecurityContext` | RBAC proxy container security context | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}` |
 | `controllerManager.kubeRbacProxy.image.repository` | Operator image repository | `"gcr.io/kubebuilder/kube-rbac-proxy"` |
