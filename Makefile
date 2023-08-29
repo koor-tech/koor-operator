@@ -109,7 +109,9 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
+test: manifests generate fmt vet test-only ## Run tests after generation.
+
+test-only: envtest ## Run tests only.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) --bin-dir $(LOCALBIN) -p path)" go test ./... -coverprofile cover.out
 
 CERTSDIR=/tmp/k8s-webhook-server/serving-certs
@@ -138,7 +140,7 @@ helm: manifests kustomize helmify ## Generate the koor-operator helm chart
 docs: helm-docs ## Generate documentation files
 
 .PHONY: ensure-generate-is-noop
-ensure-generate-is-noop: generate bundle helm docs
+ensure-generate-is-noop: manifests generate bundle helm docs fmt vet
 	@# on make bundle config/manager/kustomization.yaml includes changes, which should be ignored for the below check
 	@git restore config/manager/kustomization.yaml
 	@git diff -s --exit-code api/v1alpha1/zz_generated.*.go || (echo "Build failed: a model has been changed but the generated resources aren't up to date. Run 'make generate' and update your PR." && git --no-pager diff && exit 1)

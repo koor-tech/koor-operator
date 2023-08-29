@@ -34,4 +34,4 @@ jobs:
         run: GOPATH=$(go env GOPATH) make ensure-generate-is-noop
 
       - name: run unit tests
-        run: GOPATH=$(go env GOPATH) make -j $(nproc) test
+        run: GOPATH=$(go env GOPATH) make -j $(nproc) test-only
