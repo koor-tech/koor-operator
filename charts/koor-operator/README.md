@@ -60,7 +60,7 @@ The following table lists the configurable parameters of the rook-operator chart
 | `koorCluster.spec.ksdReleaseName` | The name to use for KSD helm release. | `"ksd"` |
 | `koorCluster.spec.monitoringEnabled` | If monitoring should be enabled, requires the prometheus-operator to be pre-installed. | `true` |
 | `koorCluster.spec.toolboxEnabled` | If the Ceph toolbox, should be deployed as well. | `true` |
-| `koorCluster.spec.upgradeOptions.endpoint` | The api endpoint used to find the ceph latest version | `"versions.koor.tech"` |
+| `koorCluster.spec.upgradeOptions.endpoint` | The api endpoint used to find the ceph latest version | `"https://versions.koor.tech"` |
 | `koorCluster.spec.upgradeOptions.mode` | Upgrade mode. Options: disabled, notify, upgrade. | `"notify"` |
 | `koorCluster.spec.upgradeOptions.schedule` | The schedule to check for new versions. Uses CRON format as specified by https://github.com/robfig/cron/tree/v3. Defaults to everyday at midnight in the local timezone. To change the timezone, prefix the schedule with CRON_TZ=<Timezone>. For example: "CRON_TZ=UTC 0 0 * * *" is midnight UTC. | `"0 0 * * *"` |
 | `koorCluster.spec.useAllDevices` | If all empty + unused devices of the cluster should be used. | `true` |
