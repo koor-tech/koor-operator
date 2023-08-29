@@ -71,7 +71,7 @@ spec:
                 description: Specifies the upgrade options for new ceph versions
                 properties:
                   endpoint:
-                    default: versions.koor.tech
+                    default: https://versions.koor.tech
                     description: The api endpoint used to find the ceph latest version
                     type: string
                   mode:

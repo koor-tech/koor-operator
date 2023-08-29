@@ -16,5 +16,5 @@ spec:
   toolboxEnabled: true
   upgradeOptions:
     mode: notify
-    endpoint: versions.koor.tech
+    endpoint: https://versions.koor.tech
     schedule: 0 0 * * *

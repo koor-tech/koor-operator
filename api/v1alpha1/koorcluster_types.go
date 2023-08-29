@@ -64,7 +64,7 @@ type UpgradeOptions struct {
 	//+kubebuilder:default:=notify
 	Mode UpgradeMode `json:"mode,omitempty"`
 	// The api endpoint used to find the ceph latest version
-	//+kubebuilder:default:="versions.koor.tech"
+	//+kubebuilder:default:="https://versions.koor.tech"
 	Endpoint string `json:"endpoint,omitempty"`
 	// The schedule to check for new versions. Uses CRON format as specified by https://github.com/robfig/cron/tree/v3.
 	// Defaults to everyday at midnight in the local timezone.

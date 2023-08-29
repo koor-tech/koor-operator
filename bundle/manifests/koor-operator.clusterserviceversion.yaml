@@ -23,7 +23,7 @@ metadata:
             "monitoringEnabled": true,
             "toolboxEnabled": true,
             "upgradeOptions": {
-              "endpoint": "versions.koor.tech",
+              "endpoint": "https://versions.koor.tech",
               "mode": "notify",
               "schedule": "0 0 * * *"
             },
@@ -32,7 +32,7 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-08-29T04:48:12Z"
+    createdAt: "2023-08-29T05:09:22Z"
     operators.operatorframework.io/builder: operator-sdk-v1.26.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
   name: koor-operator.v0.3.5
