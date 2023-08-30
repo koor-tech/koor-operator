@@ -17,5 +17,5 @@ limitations under the License.
 package utils
 
 const (
-	OperatorVersion = "0.3.5"
+	OperatorVersion = "0.3.6"
 )
