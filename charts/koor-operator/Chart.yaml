@@ -33,7 +33,7 @@ kubeVersion: ">=1.19.0"
 dependencies:
   - name: cert-manager
     repository: https://charts.jetstack.io
-    version: v1.12.3
+    version: v1.12.4
     condition: certmanager.enabled
     alias: certmanager
 
