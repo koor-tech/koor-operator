@@ -9,7 +9,7 @@ require (
 	github.com/itchyny/gojq v0.12.13
 	github.com/koor-tech/version-service v0.1.5
 	github.com/mittwald/go-helm-client v0.12.1
-	github.com/onsi/ginkgo/v2 v2.12.0
+	github.com/onsi/ginkgo/v2 v2.12.1
 	github.com/onsi/gomega v1.27.10
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
