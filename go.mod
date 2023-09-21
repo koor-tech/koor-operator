@@ -3,10 +3,10 @@ module github.com/koor-tech/koor-operator
 go 1.21
 
 require (
+	connectrpc.com/connect v1.11.1
 	github.com/Masterminds/sprig/v3 v3.2.3
-	github.com/bufbuild/connect-go v1.10.0
 	github.com/itchyny/gojq v0.12.13
-	github.com/koor-tech/version-service v0.1.5
+	github.com/koor-tech/version-service v0.1.6
 	github.com/mittwald/go-helm-client v0.12.3
 	github.com/onsi/ginkgo/v2 v2.12.1
 	github.com/onsi/gomega v1.27.10

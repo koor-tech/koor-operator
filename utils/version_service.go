@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bufbuild/connect-go"
+	"connectrpc.com/connect"
 	koapi "github.com/koor-tech/koor-operator/api/v1alpha1"
 	vsapi "github.com/koor-tech/version-service/api/v1"
 	"github.com/koor-tech/version-service/api/v1/apiv1connect"
