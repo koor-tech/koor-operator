@@ -3,7 +3,7 @@ kind: CustomResourceDefinition
 metadata:
   annotations:
     cert-manager.io/inject-ca-from: koor-operator-system/koor-operator-serving-cert
-    controller-gen.kubebuilder.io/version: v0.10.0
+    controller-gen.kubebuilder.io/version: v0.13.0
   creationTimestamp: null
   name: koorclusters.storage.koor.tech
 spec:

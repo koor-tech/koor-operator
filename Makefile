@@ -242,12 +242,12 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 .PHONY: cert-manager
 cert-manager: cmctl
 	# Consider using cmctl to install the cert-manager once install command is not experimental
-	kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v${CERTMANAGER_VERSION}/cert-manager.yaml
+	kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.yaml
 	$(CMCTL) check api --wait=5m
 
 .PHONY: undeploy-cert-manager
 undeploy-cert-manager:
-	kubectl delete --ignore-not-found=true -f https://github.com/jetstack/cert-manager/releases/download/v${CERTMANAGER_VERSION}/cert-manager.yaml
+	kubectl delete --ignore-not-found=true -f https://github.com/jetstack/cert-manager/releases/download/${CERTMANAGER_VERSION}/cert-manager.yaml
 
 ##@ Build Dependencies
 
@@ -266,12 +266,13 @@ OPERATOR_SDK ?= $(LOCALBIN)/operator-sdk
 MOCKGEN ?= $(LOCALBIN)/mockgen
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v3.8.7
-CONTROLLER_TOOLS_VERSION ?= v0.10.0
-HELMIFY_VERSION ?= v0.4.3
-CERTMANAGER_VERSION ?= 1.12.3
-OPERATOR_SDK_VERSION ?= 1.26.0
-MOCKGEN_VERSION ?= v1.6.0
+KUSTOMIZE_VERSION ?= v5.1.1
+CONTROLLER_TOOLS_VERSION ?= v0.13.0
+HELMIFY_VERSION ?= v0.4.5
+CERTMANAGER_VERSION ?= v1.13.0
+OPERATOR_SDK_VERSION ?= v1.31.0
+MOCKGEN_VERSION ?= v0.3.0
+OPM_VERSION ?= v1.29.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
@@ -287,7 +288,7 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 .PHONY: operator-sdk
 operator-sdk: $(OPERATOR_SDK) ## Download operator-sdk locally if necessary.
 $(OPERATOR_SDK): $(LOCALBIN)
-	test -s $(OPERATOR_SDK) || curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/v${OPERATOR_SDK_VERSION}/operator-sdk_`go env GOOS`_`go env GOARCH`
+	test -s $(OPERATOR_SDK) || curl -sLo $(OPERATOR_SDK) https://github.com/operator-framework/operator-sdk/releases/download/${OPERATOR_SDK_VERSION}/operator-sdk_`go env GOOS`_`go env GOARCH`
 	@chmod +x $(OPERATOR_SDK)
 
 .PHONY: envtest
@@ -304,7 +305,7 @@ ifeq (,$(shell which opm 2>/dev/null))
 	set -e ;\
 	mkdir -p $(dir $(OPM)) ;\
 	OS=$(shell go env GOOS) && ARCH=$(shell go env GOARCH) && \
-	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/v1.23.0/$${OS}-$${ARCH}-opm ;\
+	curl -sSLo $(OPM) https://github.com/operator-framework/operator-registry/releases/download/$(OPM_VERSION)/$${OS}-$${ARCH}-opm ;\
 	chmod +x $(OPM) ;\
 	}
 else
@@ -338,7 +339,7 @@ $(CMCTL): $(LOCALBIN)
 		exit 0; \
 	fi ;\
 	TMP_DIR=$$(mktemp -d) ;\
-	curl -L -o $$TMP_DIR/cmctl.tar.gz https://github.com/jetstack/cert-manager/releases/download/v$(CERTMANAGER_VERSION)/cmctl-`go env GOOS`-`go env GOARCH`.tar.gz ;\
+	curl -L -o $$TMP_DIR/cmctl.tar.gz https://github.com/jetstack/cert-manager/releases/download/$(CERTMANAGER_VERSION)/cmctl-`go env GOOS`-`go env GOARCH`.tar.gz ;\
 	tar xzf $$TMP_DIR/cmctl.tar.gz -C $$TMP_DIR ;\
 	[ -d bin ] || mkdir bin ;\
 	mv $$TMP_DIR/cmctl $(CMCTL) ;\
@@ -366,7 +367,7 @@ TOOLS_HOST_DIR := $(TOOLS_DIR)/$(HOST_PLATFORM)
 # Makefile helper functions for helm-docs: https://github.com/norwoodj/helm-docs
 #
 
-HELM_DOCS_VERSION := v1.11.0
+HELM_DOCS_VERSION := v1.11.2
 HELM_DOCS := $(TOOLS_HOST_DIR)/helm-docs-$(HELM_DOCS_VERSION)
 HELM_DOCS_REPO := github.com/norwoodj/helm-docs/cmd/helm-docs
 
@@ -387,4 +388,4 @@ helm-docs: $(HELM_DOCS) ## Use helm-docs to generate documentation from helm cha
 .PHONY: mockgen
 mockgen: $(MOCKGEN) ## Download mockgen locally if necessary.
 $(MOCKGEN): $(LOCALBIN)
-	test -s $(LOCALBIN)/mockgen || GOBIN=$(LOCALBIN) go install github.com/golang/mock/mockgen@$(MOCKGEN_VERSION)
+	test -s $(LOCALBIN)/mockgen || GOBIN=$(LOCALBIN) go install go.uber.org/mock/mockgen@$(MOCKGEN_VERSION)

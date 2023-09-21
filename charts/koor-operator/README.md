@@ -55,6 +55,7 @@ The following table lists the configurable parameters of the rook-operator chart
 | `controllerManager.manager.image.tag` | Operator image tag | `"v0.3.6"` |
 | `controllerManager.manager.resources` | Operator container resources | `{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"10m","memory":"128Mi"}}` |
 | `controllerManager.replicas` |  | `1` |
+| `controllerManager.serviceAccount.annotations` |  | `{}` |
 | `koorCluster.spec.dashboardEnabled` | Enable the Ceph MGR dashboard. | `true` |
 | `koorCluster.spec.ksdClusterReleaseName` | The name to use for KSD cluster helm release. | `"ksd-cluster"` |
 | `koorCluster.spec.ksdReleaseName` | The name to use for KSD helm release. | `"ksd"` |
