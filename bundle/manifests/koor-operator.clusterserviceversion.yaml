@@ -32,10 +32,10 @@ metadata:
         }
       ]
     capabilities: Basic Install
-    createdAt: "2023-09-21T00:52:59Z"
+    createdAt: "2023-09-21T02:46:31Z"
     operators.operatorframework.io/builder: operator-sdk-v1.31.0
     operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
-  name: koor-operator.v0.3.7
+  name: koor-operator.v0.3.8
   namespace: placeholder
 spec:
   apiservicedefinitions: {}
@@ -160,7 +160,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: docker.io/koorinc/koor-operator:v0.3.7
+                image: docker.io/koorinc/koor-operator:v0.3.8
                 livenessProbe:
                   httpGet:
                     path: /healthz
@@ -286,7 +286,7 @@ spec:
   provider:
     name: Koor Technology, Inc.
     url: koor.tech
-  version: 0.3.7
+  version: 0.3.8
   webhookdefinitions:
   - admissionReviewVersions:
     - v1
