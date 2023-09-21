@@ -28,11 +28,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/golang/mock/gomock"
 	hc "github.com/mittwald/go-helm-client"
 	hcmock "github.com/mittwald/go-helm-client/mock"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"go.uber.org/mock/gomock"
 
 	storagev1alpha1 "github.com/koor-tech/koor-operator/api/v1alpha1"
 	"github.com/koor-tech/koor-operator/mocks"

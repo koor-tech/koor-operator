@@ -38,7 +38,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/itchyny/gojq"
@@ -140,7 +139,7 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&storagev1alpha1.KoorCluster{}).
 		Watches(
-			&source.Kind{Type: &corev1.Node{}},
+			&corev1.Node{},
 			handler.EnqueueRequestsFromMapFunc(r.findKoorClusters),
 			builder.WithPredicates(predicate.Funcs{
 				CreateFunc: func(ce event.CreateEvent) bool {
@@ -169,9 +168,9 @@ func (r *KoorClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func (r *KoorClusterReconciler) findKoorClusters(_ client.Object) []reconcile.Request {
+func (r *KoorClusterReconciler) findKoorClusters(ctx context.Context, _ client.Object) []reconcile.Request {
 	koorClusterList := &storagev1alpha1.KoorClusterList{}
-	if err := r.List(context.TODO(), koorClusterList); err != nil {
+	if err := r.List(ctx, koorClusterList); err != nil {
 		return []reconcile.Request{}
 	}
 

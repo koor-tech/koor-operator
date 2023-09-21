@@ -25,6 +25,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -51,36 +52,36 @@ func (r *KoorCluster) Default() {
 var _ webhook.Validator = &KoorCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *KoorCluster) ValidateCreate() error {
+func (r *KoorCluster) ValidateCreate() (admission.Warnings, error) {
 	koorclusterlog.Info("validate create", "name", r.Name)
 
 	return r.validateKoorCluster()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *KoorCluster) ValidateUpdate(old runtime.Object) error {
+func (r *KoorCluster) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	koorclusterlog.Info("validate update", "name", r.Name)
 
 	return r.validateKoorCluster()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *KoorCluster) ValidateDelete() error {
+func (r *KoorCluster) ValidateDelete() (admission.Warnings, error) {
 	koorclusterlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
-func (r *KoorCluster) validateKoorCluster() error {
+func (r *KoorCluster) validateKoorCluster() (admission.Warnings, error) {
 	var allErrs field.ErrorList
 	if err := r.validateUpgradeSchedule(); err != nil {
 		allErrs = append(allErrs, err)
 	}
 	if len(allErrs) == 0 {
-		return nil
+		return nil, nil
 	}
-	return apierrors.NewInvalid(
+	return nil, apierrors.NewInvalid(
 		schema.GroupKind{Group: "storage.koor.tech", Kind: "KoorCluster"},
 		r.Name, allErrs)
 }
