@@ -62,6 +62,7 @@ require (
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
+	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -162,4 +163,4 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/mittwald/go-helm-client => github.com/zalsader/go-helm-client v0.0.0-20230920230600-5c0b9e9c32bd
+replace github.com/mittwald/go-helm-client => github.com/zalsader/go-helm-client v0.0.0-20230726145743-15ee7e014f3c
