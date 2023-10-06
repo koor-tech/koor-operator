@@ -31,6 +31,7 @@ The `helm install` command deploys the Koor Operator on the Kubernetes cluster i
 
 ```console
 helm repo add koor-operator https://koor-tech.github.io/koor-operator
+helm repo update
 helm install --create-namespace --namespace koor-operator koor-operator koor-operator/koor-operator -f values.yaml
 ```
 
