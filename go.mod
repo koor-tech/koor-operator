@@ -3,7 +3,7 @@ module github.com/koor-tech/koor-operator
 go 1.21
 
 require (
-	connectrpc.com/connect v1.11.1
+	connectrpc.com/connect v1.12.0
 	github.com/Masterminds/sprig/v3 v3.2.3
 	github.com/itchyny/gojq v0.12.13
 	github.com/koor-tech/version-service v0.1.6
